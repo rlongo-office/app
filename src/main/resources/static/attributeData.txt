@@ -1,0 +1,24 @@
+{
+  "data": [
+    {
+      "id": "1",
+      "name": "Attribute 1",
+      "hasvalue": "true"
+    },
+    {
+      "id": "2",
+      "name": "Attribute 2",
+      "hasvalue": "true"
+    },
+    {
+      "id": "3",
+      "name": "Attribute 3",
+      "hasvalue": "false"
+    },
+    {
+      "id": "4",
+      "name": "Attribute 4",
+      "hasvalue": "true"
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+table{
+    border-collapse:collapse;
+    border:1px solid #2a2626;
+}
+
+table td{
+    border:1px solid #2a2626;
+}
+
+td,th {
+    text-align: center;
+    font-size: xx-large;
+    font-weight: bold;
+}
+.skillheader{
+    background-color: green;
+    color: lightgrey;
+}
+.loreheader{
+    background-color: lightgreen;
+    color: black;
+}
+.big5header{
+    background-color: darkviolet;
+    color: lightgrey;
+}
+.sub5header{
+    background-color: violet;
+    color: black;
+}
+.abilityheader {
+    background-color: darkblue;
+    color: lightgrey;
+}
+.generalheader {
+    background-color: steelblue;
+    color: lightgrey;
+}
+.speciesrow{
+    text-align: center;
+    font-size: xx-large;
+    font-weight: normal;
+}
+.generalstat{
+    text-align: center;
+    font-size: xx-large;
+    font-weight: normal;
+}
+
+.h1, h1 {
+    font-size: 2.5rem;
+    color: black;
+}
+.btn-lg {
+    padding: .5rem 1rem;
+    font-size: 2.0rem;
+    line-height: 1.5;
+    border-radius: .3rem;
+}
+.card-header {
+    padding: .1rem .1rem;
+    margin-bottom: 0;
+    background-color: rgba(0,0,0,.03);
+    border-bottom: 1px solid rgba(0,0,0,.125);
+}
+
+navbar {
+    color: #2a2626;
+}
+.nav-link {
+    display: block;
+    padding: .5rem 1rem;
+    color: black;
+    font-size: 2rem;
+}

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html xmlns:th="https:thymeleaf.org">
+<head>
+<meta charset="ISO-8859-1">
+<title>Character Page</title>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.min.css">
+<script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/select/1.3.1/js/dataTables.select.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/buttons/1.6.1/js/dataTables.buttons.min.js"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+<link href="/charactersheet.css" th:href="@{/charactersheet.css}" rel="stylesheet" media="screen"/>
+</head>
+<body>
+    <nav class="navbar navbar-expand-sm bg-light justify-content-center .navbar-dark fixed-top">
+        <a class="navbar-brand" href="#">RPGWorld</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="collapsibleNavbar">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Link 1</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Link 2</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Link 3</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-12">
+                <table id="toptable" class="display" style="width:100%">
+                    <thead class="generalheader">
+                        <th>General</th>
+                    </thead>
+                    <tbody class="generalrow">
+                    <tr>
+                        <td>Age</td>
+                        <td><span th:text="${thingstats.age}"></span></td>
+                    </tr>
+                    <tr>
+                        <td>Weight</td>
+                        <td><span th:text="${thingstats.weight}"></span></td>
+                    </tr>
+                    <tr>
+                        <td>Species</td>
+                        <td>
+                            <div th:each="row: ${thingstats.species}">
+                                <div th:text="${row.key + ':' + row.value + ' '}">:</div>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+                <table id="abilitytable" class="display" style="width:100%">
+                    <thead class="abilityheader">
+                    <tr>
+                        <th>Ability</th>
+                        <th>value</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="row: ${thingstats.abilities}">
+                        <td><span th:text="${row.key}"></span></td>
+                        <td><span th:text="${row.value}"></span></td>
+                    </tr>
+                    </tbody>
+                </table>
+            	<table id="skillstable" class="display" style="width:100%">
+            	    <thead class="skillheader">
+                        <tr>
+                            <th>Skill</th>
+                            <th>value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="row: ${thingstats.skills}">
+                            <td><span th:text="${row.key}"></span></td>
+                            <td><span th:text="${row.value}"></span></td>
+                    </tr>
+            		</tbody>
+            	</table>
+                <table id="loretable" class="display" style="width:100%">
+                    <thead class="loreheader">
+                    <tr>
+                        <th>Lore</th>
+                        <th>value</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="row: ${thingstats.lores}">
+                        <td><span th:text="${row.key}"></span></td>
+                        <td><span th:text="${row.value}"></span></td>
+                    </tr>
+                    </tbody>
+                </table>
+                <table id="big5table" class="display" style="width:100%">
+                    <thead class="big5header">
+                    <tr>
+                        <th>Trait</th>
+                        <th>value</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="row: ${thingstats.bigFives}">
+                        <td><span th:text="${row.key}"></span></td>
+                        <td><span th:text="${row.value}"></span></td>
+                    </tr>
+                    </tbody>
+                </table>
+                <table id="sub5table" class="display" style="width:100%">
+                    <thead class="sub5header">
+                    <tr>
+                        <th>SubTrait</th>
+                        <th>value</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="row: ${thingstats.subFives}">
+                        <td><span th:text="${row.key}"></span></td>
+                        <td><span th:text="${row.value}"></span></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html xmlns:th="https:thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <title>Collapsible sidebar using Bootstrap 4</title>
+
+    <!-- Bootstrap CSS CDN -->
+    <script src="/jquery-3.5.1.js"></script>
+    <script src="/jquery.min.js"></script>
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="/datatables.css">
+    <script type="text/javascript" charset="utf8" src="/datatables.js"></script>
+    <link rel="stylesheet" type="text/css" href="/mainapp.css">
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/keytable/2.5.2/css/keyTable.dataTables.min.css">
+    <script src="https://cdn.datatables.net/keytable/2.5.2/js/dataTables.keyTable.min.js"></script>
+</head>
+<body>
+<nav class="navbar fixed-top navbar-expand-md bg-dark justify-content-right">
+    <div class="col-4"></div>
+    <div class="col-8"><a href="#">Story</a><a href="#">View</a><a href="#">Manage</a><a href="#">Data</a></div>
+</nav>
+<div class="main">
+    <div class="sidenav"><a href="/mainapp">Attribute</a><a href="/datathingdef">ThingDef</a><a href="#">Thing</a><a href="#">Thing Stats</a><a href="#">ThingDef Stats</a></div>
+    <div class="content-pane">
+        <div class="container-fluid">
+            <div id="firstRow" class="row">
+                <div class="col-6 table-responsive">
+                    <p class="text-center table-title">Table - ThingDef</p>
+                    <table id="thingDefTable" class="display" style="width:100%">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>ThingDef Name</th>
+                            <th>Description</th>
+                        </tr>
+                        </thead>
+                        <tfoot>
+                        <tr>
+                            <th>ID</th>
+                            <th>ThingDef Name</th>
+                            <th>Description</th>
+                        </tr>
+                        </tfoot>
+                    </table>
+                    <table cellpadding="0" cellspacing="0" border="0" class="GridOne input-table">
+                        <tr>
+                            <td class="input-label">ThingDef Name: </td>
+                            <td><input type="text" name="name" id="txtTDefName" value=""></td>
+                            <td class="input-label">Description:</td>
+                            <td><input type="text" name="description" id="txtTDefDescription" value=""></td>
+                            <td> <button id="btnNewThingDef" type="CreateNew" class="btn btn-success">Submit <span class="fa fa-arrow-right"></span></button></td>
+                            <td>
+                            </td>
+                        </tr>
+                    </table>
+                    <table>
+                        <tr>
+                            <td><button id="btnLoadThingDefStats" type="submit" class="btn btn-success">Load TD Stats<span class="fa fa-arrow-right"></span></button></td>
+                            <td><button id="btnCloneStats" type="submit" class="btn btn-success">Clone TD Stats<span class="fa fa-arrow-right"></span></button></td>
+                            <td><button id="btnUpdateStats" type="submit" class="btn btn-success">Update TD Stats<span class="fa fa-arrow-right"></span></button></td>
+                        </tr>
+                        <!--  Was used to to dump the raw JSon for viewing, but Attributes and their values are dumped into a datatable now
+                     <label for="tboxDTStats">ThingDef Stats JSON</label>
+                     </td></tr>
+                     <tr><td>
+                         <textarea id="tboxDTStats" name="tboxDTStats" rows="20" cols="100">Text area to view and edit the ThingDef Stats Json, to be used for Thing initialization
+                         </textarea>
+                         </td>
+                     </tr>  -->
+                    </table>
+                    <div>
+                        <table id="tdStatTable" class="display" style="width:100%">
+                            <thead>
+                            <tr>
+                                <th>Attribute</th>
+                                <th>Value</th>
+                            </tr>
+                            </thead>
+                            <tfoot>
+                            <tr>
+                                <th>Attribute</th>
+                                <th>Value</th>
+                            </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-6 table-responsive">
+                    <table id="attributeTable" class="display" style="width:100%">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Attribute Name</th>
+                            <th>HasValue?</th>
+                            <th>Parent ID</th>
+                        </tr>
+                        </thead>
+                        <tfoot>
+                        <tr>
+                            <th>ID</th>
+                            <th>Attribute Name</th>
+                            <th>HasValue?</th>
+                            <th>Parent ID</th>
+                        </tr>
+                        </tfoot>
+                    </table>
+                    <div class="container">
+                        <div class="row flew-row">
+                            <div class="col"><div>Attribute Name: </div>
+                            </div>
+                            <div class="col"><div ><input type="text" name="name" id="txtName" value=""></div>
+                            </div>
+                            <div class="col"><div>Has Value?:</div>
+                            </div>
+                            <div class="col"><div><input type="text" name="hasvalue" id="txtHasvalue" value=""></div>
+                            </div>
+                            <div class="col"><div>Parent ID:</div>
+                            </div>
+                            <div class="col"><div><input type="text" name="parentid" id="txtParentid" value=""></div>
+                            </div>
+                        </div>
+                        <div class="row flex-nowrap">
+                            <div class="col-4"><button id="btnNewAttribute" type="submit" class="btn btn-success">Submit <span class="fa fa-arrow-right"></span></button></div>
+                            <div class="col-8"></div>
+                        </div>
+                    </div>
+                    <!--
+                    <table style="width:100%">
+                        <tr>
+                            <td class="input-label">Attribute Name: </td>
+                            <td><input type="text" name="name" id="txtName" value=""></td>
+                        </tr>
+                        <tr>
+                            <td class="input-label">Has Value?:</td>
+                            <td><input type="text" name="hasvalue" id="txtHasvalue" value=""></td>
+                        </tr>
+                        <tr>
+                            <td class="input-label">Parent ID:</td>
+                            <td><input type="text" name="parentid" id="txtParentid" value=""></td>
+                        </tr>
+                        <tr>
+                            <td> <button id="btnNewAttribute" type="submit" class="btn btn-success">Submit <span class="fa fa-arrow-right"></span></button></td>
+                        </tr>
+                    </table>
+                    -->
+                    <table id="powerdefTable" class="display" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tfoot>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Description</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+            <div id="secondRow" class="row">
+                <div class="col-6 table-responsive">
+                    <p class="text-center table-title">Table - Thing</p>
+                    <table id="thingTable" class="display" style="width:100%">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Thing Name</th>
+                            <th>Count</th>
+                            <th>Def ID</th>
+                            <th>Description</th>
+                        </tr>
+                        </thead>
+                        <tfoot>
+                        <tr>
+                            <th>ID</th>
+                            <th>Thing Name</th>
+                            <th>Count</th>
+                            <th>Def ID</th>
+                            <th>Description</th>
+                        </tr>
+                        </tfoot>
+                    </table>
+                    <table cellpadding="0" cellspacing="0" border="1" class="GridOne input-table">
+                        <tr>
+                            <td class="input-label">Thing Name: </td>
+                            <td><input type="text" name="name" id="txtThingName" value=""></td>
+                            <td class="input-label">Description:</td>
+                            <td><input type="text" name="description" id="txtThingDescription" value=""></td>
+                            <td> <button id="btnNewThing" type="submit" class="btn btn-success">Submit <span class="fa fa-arrow-right"></span></button></td>
+                        </tr>
+                    </table>
+                    <div>
+                        <button id="btnShowThingStats" type="submit" class="btn btn-success">Submit <span class="fa fa-arrow-right"></span></button>
+                        <table id="thStatTable" class="display" style="width:100%">
+                            <thead>
+                            <tr>
+                                <th>Attribute</th>
+                                <th>Value</th>
+                            </tr>
+                            </thead>
+                            <tfoot>
+                            <tr>
+                                <th>Attribute</th>
+                                <th>Value</th>
+                            </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-6 table-responsive">
+                </div>
+            </div>
+            //container
+        </div>
+    </div>
+</div>
+<script th:inline="javascript">
+    //As opposed to server side loading of the data, we are providing the page with the data on load
+    let tableThingDefData = /*[[${listThingdef}]]*/ {};
+    let tableThingData = /*[[${listThing}]]*/ {};
+    let tableAttributeData = /*[[${listAttributes}]]*/ {};
+    let tablePowerdefData = /*[[${listPowerdef}]]*/ {};
+
+</script>
+<script type="text/javascript" charset="utf8" src="/scripts/DataThingDefThing.js"></script>
+<script type="text/javascript" charset="utf8" src="/scripts/ThingDefThingParse.js"></script>
+</body>
+</html>

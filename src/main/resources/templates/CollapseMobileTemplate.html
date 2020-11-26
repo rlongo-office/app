@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html xmlns:th="https:thymeleaf.org">
+<head>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.min.css">
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/select/1.3.1/js/dataTables.select.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.6.1/js/dataTables.buttons.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+    <!----<script src="/jquery.min.js"></script>  --->
+    <link href="/charactersheet.css" th:href="@{/charactersheet.css}" rel="stylesheet" media="screen"/>
+    <meta charset="UTF-8">
+    <title>Collapsible Card Container Example</title>
+    <style>
+        body{
+            padding-top:105px;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar fixed-top navbar-expand-md bg-light justify-content-center">
+        <ul class="navbar-nav">
+            <li class="nav-item">
+                <a class="nav-link" href="#"><img src="/character.jpg">Character  </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#"><img src="/map.jpg"> Map</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#"><img src="/history.jpg">History</a>
+            </li>
+        </ul>
+</nav>
+<br>
+<div id="accordion">
+    <div class="card">
+        <div class="card-header" id="GeneralHeader">
+            <h1 class="mb-0">
+                <button class="btn btn-lg btn-primary btn-block collapsed b-0" data-toggle="collapse" data-target="#collapseGeneral" aria-expanded="true" aria-controls="collapseGeneral">
+                    General Stats
+                </button>
+            </h1>
+        </div>
+        <div id="collapseGeneral" class="collapse show" aria-labelledby="GeneralHeader" data-parent="#accordion">
+            <div class="card-body">
+                <table id="toptable" class="display" style="width:100%">
+                    <tbody class="generalrow">
+                    <tr>
+                        <td>Age</td>
+                        <td><span th:text="${thingstats.age}"></span></td>
+                    </tr>
+                    <tr>
+                        <td>Weight</td>
+                        <td><span th:text="${thingstats.weight}"></span></td>
+                    </tr>
+                    <tr>
+                        <td>Species</td>
+                        <td>
+                            <div th:each="row: ${thingstats.species}">
+                                <div th:text="${row.key + ':' + row.value + ' '}">:</div>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header" id="AbilitiesHeader">
+            <h1 class="mb-0">
+                <button class="btn btn-lg btn-primary btn-block collapsed" data-toggle="collapse" data-target="#collapseAbilities" aria-expanded="true" aria-controls="collapseAbilities">
+                    Abilities
+                </button>
+            </h1>
+        </div>
+        <div id="collapseAbilities" class="collapse" aria-labelledby="AbilitiesHeader" data-parent="#accordion">
+            <div class="card-body">
+                <table id="abilitytable" class="display" style="width:100%">
+                    <thead class="abilityheader">
+                    <tr>
+                        <th>Ability</th>
+                        <th>value</th>
+                        <th>modifier</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="record: ${thingstats.abilities}">
+                        <td><span th:text="${record.ability}"></span></td>
+                        <td><span th:text="${record.valScore}"></span></td>
+                        <td><a th:id="'abilities-' + ${record.ability}" href="#" class="buttnut"><span th:text="${record.modifier}"></span></a></td>
+                    </tr>
+                    </tbody>
+                </table>>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header" id="SkillsHeader">
+            <h5 class="mb-0">
+                <button class="btn btn-lg btn-primary btn-block collapsed" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                    Skills
+                </button>
+            </h5>
+        </div>
+        <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordion">
+            <div class="card-body">
+                <table id="skillstable" class="display" style="width:100%">
+                    <thead class="skillheader">
+                    <tr>
+                        <th>Skill</th>
+                        <th>value</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="row: ${thingstats.skills}">
+                        <td><span th:text="${row.key}"></span></td>
+                        <td><span th:text="${row.value}"></span></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header" id="loreHeader">
+            <h5 class="mb-0">
+                <button class="btn btn-lg btn-primary btn-block collapsed" data-toggle="collapse" data-target="#collapseLore" aria-expanded="false" aria-controls="collapseLore">
+                    Lore Skills
+                </button>
+            </h5>
+        </div>
+        <div id="collapseLore" class="collapse" aria-labelledby="loreHeader" data-parent="#accordion">
+            <div class="card-body">
+                <table id="loretable" class="display" style="width:100%">
+                    <thead class="loreheader">
+                    <tr>
+                        <th>Lore</th>
+                        <th>value</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="row: ${thingstats.lores}">
+                        <td><span th:text="${row.key}"></span></td>
+                        <td><span th:text="${row.value}"></span></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header" id="big5Header">
+            <h5 class="mb-0">
+                <button class="btn btn-lg btn-primary btn-block collapsed" data-toggle="collapse" data-target="#collapseBig5" aria-expanded="false" aria-controls="collapseBig5">
+                    Big 5 Personality Traits
+                </button>
+            </h5>
+        </div>
+        <div id="collapseBig5" class="collapse" aria-labelledby="big5Header" data-parent="#accordion">
+            <div class="card-body">
+                <table id="big5table" class="display" style="width:100%">
+                    <thead class="big5header">
+                    <tr>
+                        <th>Trait</th>
+                        <th>value</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="row: ${thingstats.bigFives}">
+                        <td><span th:text="${row.key}"></span></td>
+                        <td><span th:text="${row.value}"></span></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header" id="sub5Header">
+            <h5 class="mb-0">
+                <button class="btn btn-lg btn-primary btn-block collapsed" data-toggle="collapse" data-target="#collapseSub5" aria-expanded="false" aria-controls="collapseSub5">
+                    Sub-Five Personality Traits
+                </button>
+            </h5>
+        </div>
+        <div id="collapseSub5" class="collapse" aria-labelledby="sub5Header" data-parent="#accordion">
+            <div class="card-body">
+                <table id="sub5table" class="display" style="width:100%">
+                    <thead class="big5header">
+                    <tr>
+                        <th>Sub-Trait</th>
+                        <th>value</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="row: ${thingstats.subFives}">
+                        <td><span th:text="${row.key}"></span></td>
+                        <td><span th:text="${row.value}"></span></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<div>
+    <button id="btnRollDice">Roll the Die!</button>
+    <!--<h1><p>Click this Buttnut!!</p></h1> -->
+</div>
+</body>
+<!--
+<Script>
+    $(document).ready(function(){
+        $("#btnRollDice").click(function(){
+            alert("The paragraph was clicked.");
+        });
+    });
+</script>
+-->
+<!-- Scripts placed in the header of this page caused the lack of use of the data by the thymeleaf scripting above, or flat out prevented the loading of the data at all
+So this script and I assume any others will need to be loaded here to prevent that in the future -->
+<script type="text/javascript">
+
+    $( document ).ready(function(){
+
+        $( "a" ).click(function() {
+            var $this = $(this).attr("id");
+            var rollRequest = $this.split('-');
+            obj = {};
+            obj["id"] = 3;
+            obj["category"] = rollRequest[0];
+            obj["attribute"] = rollRequest[1];
+            console.log(obj);
+            $.ajax({
+                type: 'POST',
+                url: '/rest-api/dieroll',
+                data: JSON.stringify(obj),
+                dataType: 'json',
+                contentType: 'application/json',
+                async: true,
+                success: function(result) {
+                    alert('At ' + result.time
+                        + ': ' + result.message);
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    alert(jqXHR.status + ' ' + jqXHR.responseText);
+                }
+            });
+        });
+    });
+
+</script>
+</html>

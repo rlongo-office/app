@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<html xmlns:th="https:thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <title>Collapsible sidebar using Bootstrap 4</title>
+
+    <!-- Bootstrap CSS CDN -->
+    <script src="/jquery-3.5.1.js"></script>
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="/datatables.css">
+    <script type="text/javascript" charset="utf8" src="/datatables.js"></script>
+
+    <!-- Our Custom CSS
+    <link rel="stylesheet" href="style4.css"> -->
+
+    <!-- Font Awesome JS
+    <Style>
+        .sticky-offset {
+            top: 60px;
+            width: 130px;
+            text-align: center;
+        }
+
+        .content-offset {
+            top: 60px;
+        }
+    </Style> -->
+</head>
+
+<body>
+
+<nav class="navbar navbar-expand-md navbar-dark bg-primary fixed-top">
+    ..
+</nav>
+<div id="mainrow" class="row">
+    <div id="sidebar-container" class="sidebar-expanded d-none d-md-block">
+        <ul class="list-group sticky-top sticky-offset">
+            <li>Administration</li>
+            <li>Menu item..</li>
+            <li>Menu item..</li>
+            <li>Menu item..</li>
+            <li>Menu item..</li>
+            <li>Menu item..</li>
+            <li>Menu item..</li>
+            <li>Menu item..</li>
+            <li>Menu item..</li>
+            <li>Menu item..</li>
+        </ul>
+    </div>
+    <div class="col content-offset">
+        <!-- Page Content  -->
+        <div id="maincontent">
+            <h2>Collapsible Sidebar Using Bootstrap 4</h2>
+            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+            <!--div class="line"></div>-->
+            <table id="attributeTable" class="display" style="width:100%">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Attribute Name</th>
+                    <th>HasValue?</th>
+                    <th>Parent ID</th>
+                </tr>
+                </thead>
+                <tfoot>
+                <tr>
+                    <th>ID</th>
+                    <th>Attribute Name</th>
+                    <th>HasValue?</th>
+                    <th>Parent ID</th>
+                </tr>
+                </tfoot>
+            </table>
+                <table cellpadding="0" cellspacing="0" border="1" class="GridOne">
+                    <tr>
+                        <td>Attribute Name: </td>
+                        <td><input type="text" name="name" id="txtName" value=""></td>
+                        <td>Has Value?:   </td>
+                        <td><input type="text" name="hasvalue" id="txtHasvalue" value=""></td>
+                        <td>Parent ID:   </td>
+                        <td><input type="text" name="parentid" id="txtParentid" value=""></td>
+                        <td> <button id="btnNewAttribute" type="submit" class="btn btn-success">Submit <span class="fa fa-arrow-right"></span></button></td>
+                    </tr>
+                </table>
+            <!--div class="line"></div>-->
+
+            <h2>Lorem Ipsum Dolor</h2>
+            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+            <!--div class="line"></div>-->
+            <h3>Lorem Ipsum Dolor</h3>
+            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+            <h3>Lorem Ipsum Dolor</h3>
+            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+            <h3>Lorem Ipsum Dolor</h3>
+            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+            <h3>Lorem Ipsum Dolor</h3>
+            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+            <h3>Lorem Ipsum Dolor</h3>
+            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+            <h3>Lorem Ipsum Dolor</h3>
+            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+            <h3>Lorem Ipsum Dolor</h3>
+            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+            <h3>Lorem Ipsum Dolor</h3>
+            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+            <h3>Lorem Ipsum Dolor</h3>
+            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+            <h3>Lorem Ipsum Dolor</h3>
+            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+        </div>
+    </div>
+</div>
+<script th:inline="javascript">
+
+    let tableData = /*[[${listAttributes}]]*/ {};
+
+    $(document).ready(function() {
+        var attrTable = $('#attributeTable').DataTable( {
+            data: tableData,
+            "columns": [
+                { "data": "id" },
+                { "data": "name" },
+                { "data": "hasvalue"},
+                { "data": "attributeByIdAttribute"},
+            ]
+        } );
+
+        $('#attributeTable tbody').on( 'click', 'tr', function () {
+            if ( $(this).hasClass('selected') ) {
+                $(this).removeClass('selected');
+            }
+            else {
+                attrTable.$('tr.selected').removeClass('selected');
+                $(this).addClass('selected');
+            }
+        } );
+
+        $('#attributeTable tbody').on( 'click', 'tr', function () {
+            //var numId = attrTable.rows('.selected').data();
+            var selectedID = attrTable.row(this).data().id;
+            console.log( attrTable.row(this).data().id );
+            $("#txtParentid").val(selectedID);
+        } );
+
+
+        $( "#btnNewAttribute" ).click(function() {
+
+            var formData = new Object();
+            let attrObj = new Object();
+            let parentId = $("#txtParentid").val();
+            attrObj.name = $("#txtName").val();
+            attrObj.hasvalue = $("#txtHasvalue").val();
+
+            formData["attribute"] = attrObj;
+            formData["parentId"] = parentId;
+
+            alert( "Sent" + JSON.stringify(formData) );
+            $.ajax({
+                url: '/rest-api/addAttribute',
+                method: 'POST',
+                contentType : 'application/json; charset=utf-8',
+                dataType: 'json',
+                data: JSON.stringify(formData),
+                success: function(data) {
+                    alert("Successful Post to Spring Controller with data " + data);
+                }
+            })
+        });
+    } );
+
+</script>
+<!--
+<script defer>
+    $(document).ready(function() {
+        $('#attributeTable').DataTable( {
+            "ajax": "/attributeData.txt",
+            "columns": [
+                { "data": "id" },
+                { "data": "name" },
+                { "data": "hasvalue" },
+            ]
+        } );
+    } );
+</script> -->
+</body>
+</html>

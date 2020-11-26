@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html xmlns:th="https:thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <title>Collapsible sidebar using Bootstrap 4</title>
+
+    <!-- Bootstrap CSS CDN -->
+    <script src="/jquery-3.5.1.js"></script>
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="/datatables.css">
+    <script type="text/javascript" charset="utf8" src="/datatables.js"></script>
+    <link rel="stylesheet" type="text/css" href="/mainapp.css">
+</head>
+<body>
+<nav class="navbar fixed-top navbar-expand-md bg-dark justify-content-right">
+    <div class="col-4"></div>
+    <div class="col-8"><a href="#">Story</a><a href="#">View</a><a href="#">Manage</a><a href="#">Data</a></div>
+</nav>
+<div class="main">
+    <div class="sidenav"><a href="/mainapp">Attribute</a><a href="/datathingdef">ThingDef</a><a href="#">Thing</a><a href="#">Thing Stats</a><a href="#">ThingDef Stats</a></div>
+    <div class="content-pane">
+        <p class="text-center table-title">Table - Attribute</p>
+        <div class="table-responsive">
+            <table id="attributeTable" class="display" style="width:100%">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Attribute Name</th>
+                    <th>HasValue?</th>
+                    <th>Parent ID</th>
+                </tr>
+                </thead>
+                <tfoot>
+                <tr>
+                    <th>ID</th>
+                    <th>Attribute Name</th>
+                    <th>HasValue?</th>
+                    <th>Parent ID</th>
+                </tr>
+                </tfoot>
+            </table>
+            <table cellpadding="0" cellspacing="0" border="1" class="GridOne">
+                <tr>
+                    <td class="input-label">Attribute Name: </td>
+                    <td><input type="text" name="name" id="txtName" value=""></td>
+                    <td class="input-label">Has Value?:</td>
+                    <td><input type="text" name="hasvalue" id="txtHasvalue" value=""></td>
+                    <td class="input-label">Parent ID:</td>
+                    <td><input type="text" name="parentid" id="txtParentid" value=""></td>
+                    <td> <button id="btnNewAttribute" type="submit" class="btn btn-success">Submit <span class="fa fa-arrow-right"></span></button></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
+<script src="assets/js/jquery.min.js"></script>
+<script src="assets/bootstrap/js/bootstrap.min.js"></script>
+<script th:inline="javascript">
+
+    let tableData = /*[[${listAttributes}]]*/ {};
+
+    $(document).ready(function() {
+        var attrTable = $('#attributeTable').DataTable( {
+            data: tableData,
+            "columns": [
+                { "data": "id" },
+                { "data": "name" },
+                { "data": "hasvalue"},
+                { "data": "attributeByIdAttribute"},
+            ]
+        } );
+
+        $('#attributeTable tbody').on( 'click', 'tr', function () {
+            if ( $(this).hasClass('selected') ) {
+                $(this).removeClass('selected');
+            }
+            else {
+                attrTable.$('tr.selected').removeClass('selected');
+                $(this).addClass('selected');
+            }
+        } );
+
+        $('#attributeTable tbody').on( 'click', 'tr', function () {
+            //var numId = attrTable.rows('.selected').data();
+            var selectedID = attrTable.row(this).data().id;
+            console.log( attrTable.row(this).data().id );
+            $("#txtParentid").val(selectedID);
+        } );
+
+
+        $( "#btnNewAttribute" ).click(function() {
+
+            let formData = new Object();
+            let attrObj = new Object();
+            let parentId = null;
+            if (!$("#txtParentid").val()) {
+                parentId = $("#txtParentid").val();
+            }
+            attrObj.name = $("#txtName").val();
+            attrObj.hasvalue = $("#txtHasvalue").val();
+
+            formData["attribute"] = attrObj;
+            formData["parentId"] = parentId;
+
+            //alert( "Sent" + JSON.stringify(formData) );
+            $.ajax({
+                url: '/rest-api/addAttribute',
+                method: 'POST',
+                contentType : 'application/json; charset=utf-8',
+                dataType: 'json',
+                data: JSON.stringify(formData),
+                success: function(response) {
+                    attrTable.row.add(response).draw();
+                    alert("Successful Post to Spring Controller with data " + response);
+                }
+            })
+        });
+    } );
+</script>
+</body>
+</html>
