@@ -36,7 +36,7 @@ public class MyRunner implements CommandLineRunner {
         TerrainService terrainService = new TerrainService();
         //terrainService.testPseudoRandSeq(204097005l);
         //terrainService.testAlphaValues("C:\\development\\maps\\AlphaTest.png");
-        //terrainService.generateTerrain("C:\\development\\maps\\faerun.6.10.gif",6,10,1000,1000);
-        terrainService.createSeaGradientPalette();
+        terrainService.generateTerrain("C:\\development\\maps\\faerun.6.10.gif",6,10,100,100);
+        //terrainService.createSeaGradientPalette();
     }
 }

@@ -34,8 +34,11 @@ public class TerrainService {
             0x0054A6, 0xFFF5EE, 0xA9A9A9, 0xB0C4DE, 0xF0E68C, 0x663300, 0xF5F5DC, 0x404040, 0x8FBC8F, 0xB22222};
 
     /*
+    Checking Github push capabilities with a simple file change as comment
+     */
+    /*
     Below is the RGB values for the map elevations gradiant, starting with 0 and increasing incrementally by 100 up to 30000.  In the future, for elevations above 30K feet, will use
-    Alpha value as a multiplier,so 1x for 0-30k, 2x for 30100 to 60K, etc
+    Alpha value as a multiplier,so 1x for 0-30k, 2x for 30100 to 60K, etc.  Same for the seaTopoColors only in reverse (depth measurements)
      */
     public int[] topoColors = {744734,1929010,2849086,3506246,4032077,4492114,4951895,5280346,5608798,5871713,6134372,6397030,6594153,6856811,7053933,7185519,7382384,7513970,
             7710836,7842165,7973750,8105080,8236409,8367738,8499068,8630397,8696190,8827519,8893312,9024641,9090434,9221507,9287300,9418629,9484421,9549958,9615751,9747080,9812616,
@@ -74,8 +77,8 @@ public class TerrainService {
         //    topoMap.put(topoColors[m],m*100);
        // }
 
-        adjOrthWeight = 0.50;
-        adjCornWeight = 0.025;
+        adjOrthWeight = 0.50;           //weight given to orthographically adjacent map points
+        adjCornWeight = 0.025;          //weight given to diagonally adjacent map points
         generalWeight = 0.035;
     }
 
@@ -169,14 +172,14 @@ public class TerrainService {
         String fileStub = "C:\\development\\maps\\faerun.";
         int[][] pixelBox = new int[3][3];   //holds pixel colors of adjacent orthogonal and diagonal terrain
         Integer terrainColor = 0x000000;
-        int globalXPos = bigXPos * 100;             //The x and y coordiate of the smallMap on the Global (world) map
+        int globalXPos = bigXPos * 100;             //The x and y coordinates of the smallMap on the Global (world) map
         int globalYPos = bigYPos * 100;
         BufferedImage bigMapImage, smallMapImage;
         //Load image File
         bigMapImage = ImageIO.read(new File(bigFileName));
         //Get width and height (x and y) for the image
-        int bigWidth = bigMapImage.getWidth();           //Width we want for our small map generated image
-        int bigHeight = bigMapImage.getHeight();          //Height we want for our small map generated image
+        int bigWidth = bigMapImage.getWidth();
+        int bigHeight = bigMapImage.getHeight();
         //Nested loop for x and y coordinates
         int[][] bigMapPixels = new int[bigWidth][bigHeight];
         for (int h = 0; h < bigHeight; h++) {
