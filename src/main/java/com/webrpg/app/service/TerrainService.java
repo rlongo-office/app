@@ -187,6 +187,10 @@ public class TerrainService {
                 //Load Terrain (color) values into pixel array
                 terrainColor = (bigMapImage.getRGB(w, h) & 0x00FFFFFF);     //strip off the alpha, leaves only RGB
                 bigMapPixels[w][h] = terrainColor;
+                /*
+                If Terrain is a river run separate process to set values for river generation for that submap
+                 */
+
             }
         }
         //For each pixel generate subMap (png most likely)
@@ -274,7 +278,7 @@ public class TerrainService {
         Integer currID = 0;
         /*
         We are filling a 3x3 array with a TerrainSelector that will be an overlay of the currently considered terrain type
-        and some weighted addition of an adjacent terrain type.  Position 0,0 corresponds top left corner, top left 0,1 , top
+        and some weighted addition of an adjacent terrain type.  Position 0,0 corresponds top left corner, top  0,1 , top
         right corner 0,2, left side 1,0, etc to bottom right corner 2,2.  Corners have the least effect on the current terrain
         calculation and so impose a lower weight than orthogonally adjacent terrain (.05 vs .3 respectively)
          */
