@@ -9,6 +9,8 @@ import java.security.SecureRandom;
 import java.util.*;
 import java.util.List;
 
+import com.webrpg.app.model.derived.RiverMap;
+import com.webrpg.app.model.derived.Point;
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 
@@ -22,6 +24,7 @@ public class TerrainService {
     private double adjCornWeight;
     private double generalWeight;
     private Map<Integer, Integer> topoMap;
+    private int expo = 10;  //for our point conversion to key values for hashmap use
 
     private String[] terrNames = {
             "BEACH", "BOG", "CLEARED", "DESERT", "ESTUARY", "FARMLAND", "CON_FOREST", "DEC_FOREST", "GLACIER", "GRASSLAND", "JUNGLE",
@@ -166,9 +169,79 @@ public class TerrainService {
         ImageIO.write(img, "png", f);
     }
 
+    public int analyzeRivers(String bigFileName, int bigXPos, int bigYPos, int smallWidth, int smallHeight) throws IOException {
+        //bigFileName = "C:\\development\\maps\\faerun.6.10.small.gif";
+        Map<Integer, RiverMap> riverMaps = new HashMap<>();
+        int[][] pixelBox = new int[3][3];   //holds pixel colors of adjacent orthogonal and diagonal terrain
+        BufferedImage bigMapImage, smallMapImage;
+        Integer terrainColor = 0x000000;
+        //Load image File
+        bigMapImage = ImageIO.read(new File(bigFileName));
+        //Get width and height (x and y) for the image
+        int bigWidth = bigMapImage.getWidth();
+        int bigHeight = bigMapImage.getHeight();
+        //Nested loop for x and y coordinates
+        int[][] bigMapPixels = new int[bigWidth][bigHeight];
+        for (int h = 0; h < bigHeight; h++) {
+            for (int w = 0; w < bigWidth; w++) {
+                //Load Terrain (color) values into pixel array
+                terrainColor = (bigMapImage.getRGB(w, h) & 0x00FFFFFF);     //strip off the alpha, leaves only RGB
+                bigMapPixels[w][h] = terrainColor;
+                //If we have a river point, this will require special processing. Collect these points for later work
+                if (terrMap.getKey(bigMapPixels[w][h]).equals("RIVER")){
+                    /*
+                    Rather than create a multidimensional hashmap to key against a Point, using some math to create the
+                    key from x, and y value, in this case int key = i*E + j.  It follows that i=key/E and j=key%E
+                     */
+                    riverMaps.put(w*expo+h,new RiverMap(new Point(w,h)));
+                }
+            }
+        }
+        /*
+        Now that we've scanned the map for river instances, iterate through our river Hashmap and complete River Object
+        which includes setting endpoint flag, entry and exit points. We are not generating the terrain in this function,
+        but this River terrain information will be used when the tactical terrain does need to be generated in the future.
+         */
+        //Flag all the rivers first
+        for (RiverMap r : riverMaps.values()){
+            //check each river point in relation to surrounding points and determine endpoint status and exit,entry points
+            //1.get pixel box for current river point - test if origin, destination, or pass-through river point
+            //conditions - connected to estuary point = destination; river with only one (or none) connecting river point AND
+            //not connected to estuary point = origin; if not the other 2, the equals a pass-through
+            pixelBox = getPixelBox(bigMapPixels,r.getPoint().getX(),r.getPoint().getY(),bigWidth,bigHeight);
+            r.setType(setRiverEndPointFlag(pixelBox));
+        }
+        //Now
+            return 1;
+    }
 
+
+    public int setRiverEndPointFlag(int[][] pixelBox){
+        //get the pixelBox for this point in the map
+        int estuary = 2;    //destination of river
+        int origin = 1;     //origin of river flow
+        int connector = 0;  //this is a flow through point
+        int adjRivers = 0;   //count of adjacent River points - needed to determine origin versus flow through connector
+        //blank out middle point, we are only testing what adjacent to define it
+        pixelBox[1][1] = 0;
+        for (int x = 0; x < pixelBox.length; x++) {
+            for (int y = 0; y < pixelBox[0].length; y++) {
+                    if (terrMap.getKey(pixelBox[x][y]).equals("ESTUARY")) return estuary;  //we have a 'destination' map
+                    if (terrMap.getKey(pixelBox[x][y]).equals("RIVER")) adjRivers+=1;
+                }
+            }
+        //Below because we define an 'origin' river point as one with only one adjacent river point (for simplicity)...
+        if (adjRivers > 1) return connector;
+        return origin;  //we have an origin, since it was not adj to estuary and no more than 1 other river point
+    }
+
+    //bigXPos, bigYPos is the position of regional(biggie) section on the world map; smallWidth and smallHeight set the
+    //size of the tactical (small) map to be generated from each point (pixel) we read on the biggie map. In our first case
+    //since we scaled the world map to 1 pixel = 5000 ft, and if we consider each "point" on our small map equals 5 feet
+    // (standard for many tactical tabletop square dimensions) then we will need the small map to be 5000/5 = 1000 pixels squared
     public int generateTerrain(String bigFileName, int bigXPos, int bigYPos, int smallWidth, int smallHeight) throws IOException {
         //bigFileName = "C:\\development\\maps\\faerun.6.10.small.gif";
+        List<RiverMap> riverMaps = new ArrayList<>();
         String fileStub = "C:\\development\\maps\\faerun.";
         int[][] pixelBox = new int[3][3];   //holds pixel colors of adjacent orthogonal and diagonal terrain
         Integer terrainColor = 0x000000;
@@ -187,10 +260,10 @@ public class TerrainService {
                 //Load Terrain (color) values into pixel array
                 terrainColor = (bigMapImage.getRGB(w, h) & 0x00FFFFFF);     //strip off the alpha, leaves only RGB
                 bigMapPixels[w][h] = terrainColor;
-                /*
-                If Terrain is a river run separate process to set values for river generation for that submap
-                 */
-
+                //If we have a river point, this will require special processing. Collect these points for later work
+                if (terrMap.getKey(bigMapPixels[w][h]).equals("RIVER")){
+                    riverMaps.add(new RiverMap(new Point(w,h)));
+                }
             }
         }
         //For each pixel generate subMap (png most likely)
@@ -198,7 +271,7 @@ public class TerrainService {
         int tempYPos;
         for (int h = 0; h < smallHeight; h++) {
             for (int w = 0; w < smallWidth; w++) {
-                pixelBox = getPixelBox(bigMapPixels, w, h, smallWidth, smallHeight);
+                pixelBox = getPixelBox(bigMapPixels, w, h, bigWidth, bigHeight);
                 //grab pixel color at (x,y); if needed, convert to proper hex value
                 //generate subMap
                 tempXPos = globalXPos + w;
@@ -341,34 +414,40 @@ public class TerrainService {
         }
          */
 
-
-    private int[][] getPixelBox(int[][] bigMapPixels, int w, int h, int smWidth, int smHeight) {
-        //Test if pixel for 8 conditions: 4 corner positions, 4 side positions
-
+    //Test if pixel for 8 conditions: 4 corner positions, 4 side positions
+    //Because the pixel could pixel coordinates could be at the edges or corner of the big map, some of the positions
+    //in our returned int array will not correspond to a color (the position they reference doesnt exist) and we just
+    //keep int - 0x0000
+    //***Note I dont like this if then logic.  There are redundant tests performed for height
+    private int[][] getPixelBox(int[][] bigMapPixels, int w, int h, int bigWidth, int bigHeight) {
         int[][] pixelBox = {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}};   //prefill with black, which equals "no adjacent pixel at x,y position"
+        int maxRight = bigWidth-1;      //farthest most x position
+        int maxBottom = bigHeight-1;    //farthest most y position
+        //***test for left positions ***/
         pixelBox[1][1] = bigMapPixels[w][h];                      //1.1 position always filled - it is the main selector color
-        if (w != 0) {                                              //This is not a left border pixel on the biggy map
+        if (w != 0) {                                              //Test if this is not a left border pixel on the biggy map
             pixelBox[0][1] = bigMapPixels[w - 1][h];                //Left center pixel filled
-            if (h != 0) {                                          //this is not a top border pixel on the biggy map
+            if (h != 0) {                                          //Test if this is not a top border pixel on the biggy map
                 pixelBox[0][0] = bigMapPixels[w - 1][h - 1];          //top left corner pixel filled
             }
-            if (h != smHeight - 1) {                                   //this is not a bottom border pixel on the biggy map
+            if (h != maxBottom) {                                   //Test if this is not a bottom border pixel on the biggy map
                 pixelBox[0][2] = bigMapPixels[w - 1][h + 1];          //bottom left corner pixel filled
             }
         }
-        if (w != smWidth - 1) {
+        //***test for right positions ***/
+        if (w != maxRight) {
             pixelBox[2][1] = bigMapPixels[w + 1][h];                //right center pixel filled
             if (h != 0) {                                          //this is not a top border pixel on the biggy map
                 pixelBox[2][0] = bigMapPixels[w + 1][h - 1];          //top right corner pixel filled
             }   //this is not a top border pixel
-            if (h != smHeight - 1) {                                   //this is not a bottom border pixel on the biggy map
+            if (h != maxBottom) {                                   //this is not a bottom border pixel on the biggy map
                 pixelBox[2][2] = bigMapPixels[w + 1][h + 1];          //bottom right corner pixel filled
             }
         }
         if (h != 0) {                                          //this is not a top row pixel on the biggy map
             pixelBox[1][0] = bigMapPixels[w][h - 1];            //top center corner pixel filled
         }
-        if (h != smHeight - 1) {                                   //this is not a bottom row pixel on the biggy map
+        if (h != maxBottom) {                                   //this is not a bottom row pixel on the biggy map
             pixelBox[1][2] = bigMapPixels[w][h + 1];          //bottom center pixel filled
         }
         return pixelBox;
@@ -436,7 +515,7 @@ public class TerrainService {
             {50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 950, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
             {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 900, 0, 50, 0, 50, 0, 0, 0, 0, 0, 0, 0},
             {50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 950, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 900, 0, 50, 0, 0, 0, 50, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0,900, 0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 0, 0, 0, 50, 0, 0, 0},
             {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1000, 0, 0, 0, 0, 0, 0, 0, 0},
             {0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 900, 0, 0, 0, 50, 0, 0, 0},
             {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 900, 0, 0, 50, 0, 0, 0},

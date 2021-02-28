@@ -4,16 +4,39 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RiverMap {
-    List<RiverEdge> entries;   //holds all edge objects related to river inputs into the map
-    List<RiverEdge> exits;     //holds all edge objects related to river inputs into the map
-    int type;                   // 0= not an endpoint, 1=origin point, 2=destination point
+    List<RiverMap> parents;     //holds the parents, which hold the inflow edges
+    List<RiverEdge> outflows;      //holds all edge objects related to river outflows from this tactical map
+    int type;                   // 0 = not an endpoint, 1 = origin point, 2 = destination point
     Point point;                //the point on the region(big) map where this river submap resides
 
     public RiverMap(){
-        entries = new ArrayList<RiverEdge>();
-        exits = new ArrayList<RiverEdge>();
+        parents = new ArrayList<RiverMap>();
+        outflows = new ArrayList<RiverEdge>();
         type = 0;
         point = new Point(0,0);
+    }
+
+    public RiverMap(Point p){
+        parents = new ArrayList<RiverMap>();
+        outflows = new ArrayList<RiverEdge>();
+        type = 0;
+        point = p;
+    }
+
+    public Point getPoint() {
+        return point;
+    }
+
+    public void setPoint(Point point) {
+        this.point = point;
+    }
+
+    public int getType() {
+        return type;
+    }
+
+    public void setType(int type) {
+        this.type = type;
     }
 
     class RiverEdge{
