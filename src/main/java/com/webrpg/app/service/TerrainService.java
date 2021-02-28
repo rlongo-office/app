@@ -25,6 +25,10 @@ public class TerrainService {
     private double generalWeight;
     private Map<Integer, Integer> topoMap;
     private int expo = 10;  //for our point conversion to key values for hashmap use
+    //Constants
+    private static final int RIVER_ORIG= 1;
+    private static final int RIVER_DEST = 2;
+    private static final int RIVER_CONN = 0;
 
     private String[] terrNames = {
             "BEACH", "BOG", "CLEARED", "DESERT", "ESTUARY", "FARMLAND", "CON_FOREST", "DEC_FOREST", "GLACIER", "GRASSLAND", "JUNGLE",
@@ -86,89 +90,6 @@ public class TerrainService {
     }
 
 
-
-    //public void testPseudoRandSeq(Long seed) {
-    //    SecureRandom rand = new SecureRandom(seed.toString().getBytes());
-    //    for (int i = 0; i < 100; i++) {
-    //        System.out.println(rand.nextDouble());
-    //    }
-   // }
-
-
-    public void testAlphaValues(String fileName) throws IOException {
-        BufferedImage mapImage;
-        Color terrainColor;
-        mapImage = ImageIO.read(new File(fileName));
-        int width = mapImage.getWidth();           //Width we want for our small map generated image
-        int height = mapImage.getHeight();          //Height we want for our small map generated image
-        //Nested loop for x and y coordinates
-        int[][] mapPixels = new int[width][height];
-        for (int h = 0; h < height; h++) {
-            System.out.print("Row-" + h + ":" );
-            for (int w = 0; w < width; w++) {
-                //Load Terrain (color) values into pixel array
-                terrainColor = new Color(mapImage.getRGB(w, h),true);     //strip off the alpha, leaves only RGB
-                mapPixels[w][h] = terrainColor.getRGB();
-                System.out.print(terrainColor.getAlpha() + " ");
-            }
-            System.out.println();
-        }
-    }
-
-    public void createSeaGradientPalette() throws IOException {
-        int color = 0x000000; //Black Default
-        //Producing usable Palette, 10 pixels high for each color entry
-        BufferedImage img = new BufferedImage(100, seaTopoColors.length*10, BufferedImage.TYPE_INT_RGB);
-        int bandY;
-
-        for (int y = 0; y < seaTopoColors.length; y++) {
-            //8 bands of color
-            bandY = y*10;
-            color = seaTopoColors[y];
-            for (int offset = 0; offset <8; offset++) {
-                for (int x = 0; x < 100; x++) {
-                    img.setRGB(x, bandY+offset, color);
-                }
-            }
-            //2 bands of black border
-            color = 0x000000;
-            for (int offset = 8; offset <10; offset++) {
-                for (int x = 0; x < 100; x++) {
-                    img.setRGB(x, bandY + offset, color);
-                }
-            }
-        }
-        File f = new File("C:\\development\\maps\\SeaTopoColorGradient.png");
-        ImageIO.write(img, "png", f);
-    }
-
-    public void createGradientPalette() throws IOException {
-        int color = 0x000000; //Black Default
-        //Producing usable Palette, 10 pixels high for each color entry
-        BufferedImage img = new BufferedImage(100, topoColors.length*10, BufferedImage.TYPE_INT_RGB);
-        int bandY;
-
-        for (int y = 0; y < topoColors.length; y++) {
-            //8 bands of color
-            bandY = y*10;
-            color = topoColors[y];
-            for (int offset = 0; offset <8; offset++) {
-                for (int x = 0; x < 100; x++) {
-                    img.setRGB(x, bandY+offset, color);
-                }
-            }
-            //2 bands of black border
-            color = 0x000000;
-            for (int offset = 8; offset <10; offset++) {
-                for (int x = 0; x < 100; x++) {
-                    img.setRGB(x, bandY + offset, color);
-                }
-            }
-        }
-        File f = new File("C:\\development\\maps\\TopoColorGradient.png");
-        ImageIO.write(img, "png", f);
-    }
-
     //check each river point in relation to surrounding points and determine endpoint status and exit,entry points
     //1.get pixel box for current river point - test if origin, destination, or pass-through river point
     //conditions - connected to estuary point = destination; river with only one (or none) connecting river point AND
@@ -211,21 +132,48 @@ public class TerrainService {
             pixelBox = getPixelBox(bigMapPixels,r.getPoint().getX(),r.getPoint().getY(),bigWidth,bigHeight);
             r.setType(setRiverEndPointFlag(pixelBox));
         }
-        //Now we interate again to find the origin points and traverse the river to either a river point with destination
-        // OR we another River point that already has a parent, and we had to that points parent list
+        //Now we iterate again to find the origin points and traverse the river to either a river point with destination
+        // OR we hit another River point that already has a parent
         for (RiverMap r : riverMaps.values()){
-            if (r.getType() == 1){  //we have a river origin
+            if (r.getType() == RIVER_ORIG){  //we have a river origin
                 traverseRiver(r, bigMapPixels,riverMaps);
             }
-
-            r.setType(setRiverEndPointFlag(pixelBox));
         }
-        //Now
+        //We need to serialize this HashMap to load the information back when we need to generate terrain on the fly.
             return 1;
     }
 
     private void traverseRiver(RiverMap r, int[][] bigMapPixels, Map<Integer, RiverMap> riverMaps) {
         //get the pixelBox for this RiverMap Object
+        int bigWidth = bigMapPixels.length;
+        int bigHeight = bigMapPixels[0].length;
+        int riverX = r.getPoint().getX();
+        int riverY = r.getPoint().getY();
+        int[][] pixelBox = new int[3][3];
+        pixelBox = getPixelBox(bigMapPixels,riverX,riverY,bigWidth,bigHeight);
+        //Loop through pixel box - for each adjacent River without a parent, add that adjacent River
+        // to this RiverMap object's list of children
+        for (int x = 0; x < pixelBox.length; x++) {
+            for (int y = 0; y < pixelBox[0].length; y++) {
+                if (terrMap.getKey(pixelBox[x][y]).equals("RIVER")) {
+                    /*
+                        Code required here to add an edge to the current object associated with this adjacent River
+                     */
+                    int adjX = riverX + x - 1;
+                    int adjY = riverY + y - 1;
+                    RiverMap adjRiver = riverMaps.get(x*10 + 1);
+                    if (adjRiver.getParents().isEmpty()){
+                        r.getChildren().add(adjRiver);
+                        //Hand off to this child River point if it is NOT a destination point. This recursion should
+                        //eventually end at a river destination point, return back to first origin point loop, and
+                        //keep traversing child river 'flows' until we've exhausted them
+                        if (adjRiver.getType() != RIVER_DEST) {
+                            traverseRiver(adjRiver, bigMapPixels, riverMaps);
+                        }
+                    }
+                }
+            }
+        }
         //Have parent(s)? Then disregard that parent point in the pixelBox
         //Set all other adjacent River pixels as children UNLESS they already have parent(s)
     }
@@ -233,21 +181,18 @@ public class TerrainService {
 
     public int setRiverEndPointFlag(int[][] pixelBox){
         //get the pixelBox for this point in the map
-        int estuary = 2;    //destination of river
-        int origin = 1;     //origin of river flow
-        int connector = 0;  //this is a flow through point
         int adjRivers = 0;   //count of adjacent River points - needed to determine origin versus flow through connector
         //blank out middle point, we are only testing what adjacent to define it
         pixelBox[1][1] = 0;
         for (int x = 0; x < pixelBox.length; x++) {
             for (int y = 0; y < pixelBox[0].length; y++) {
-                    if (terrMap.getKey(pixelBox[x][y]).equals("ESTUARY")) return estuary;  //we have a 'destination' map
+                    if (terrMap.getKey(pixelBox[x][y]).equals("ESTUARY")) return RIVER_DEST;  //we have a 'destination' map
                     if (terrMap.getKey(pixelBox[x][y]).equals("RIVER")) adjRivers+=1;
                 }
             }
         //Below because we define an 'origin' river point as one with only one adjacent river point (for simplicity)...
-        if (adjRivers > 1) return connector;
-        return origin;  //we have an origin, since it was not adj to estuary and no more than 1 other river point
+        if (adjRivers > 1) return RIVER_CONN;
+        return RIVER_ORIG;  //we have an origin, since it was not adj to estuary and no more than 1 other river point
     }
 
     //bigXPos, bigYPos is the position of regional(biggie) section on the world map; smallWidth and smallHeight set the
@@ -541,7 +486,6 @@ public class TerrainService {
             {0, 150, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 150, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 700, 0},
             {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 0, 0, 0, 0, 0, 0, 950}
     };
-
 }
 
 

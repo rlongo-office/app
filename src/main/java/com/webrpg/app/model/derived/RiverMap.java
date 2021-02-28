@@ -42,6 +42,30 @@ public class RiverMap {
         this.type = type;
     }
 
+    public List<RiverMap> getParents() {
+        return parents;
+    }
+
+    public void setParents(List<RiverMap> parents) {
+        this.parents = parents;
+    }
+
+    public List<RiverMap> getChildren() {
+        return children;
+    }
+
+    public void setChildren(List<RiverMap> children) {
+        this.children = children;
+    }
+
+    public List<RiverEdge> getOutflows() {
+        return outflows;
+    }
+
+    public void setOutflows(List<RiverEdge> outflows) {
+        this.outflows = outflows;
+    }
+
     class RiverEdge{
         Point first;        //first boundary point on submap for this river edge
         Point second;       //second boundary point on submap for this river edge
