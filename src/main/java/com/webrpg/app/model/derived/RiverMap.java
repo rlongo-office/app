@@ -4,13 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RiverMap {
-    List<RiverMap> parents;     //holds the parents, which hold the inflow edges
-    List<RiverEdge> outflows;      //holds all edge objects related to river outflows from this tactical map
-    int type;                   // 0 = not an endpoint, 1 = origin point, 2 = destination point
-    Point point;                //the point on the region(big) map where this river submap resides
+    List<RiverMap> parents;         //holds the parent 'nodes', which hold the inflow edges
+    List<RiverMap> children;        //holds the child river 'nodes', each outflow edge corresponds to a child node
+    List<RiverEdge> outflows;       //holds all edge objects related to river outflows from this tactical map
+    int type;                       // 0 = not an endpoint, 1 = origin point, 2 = destination point
+    Point point;                    //the point on the region(big) map where this river submap resides
 
     public RiverMap(){
         parents = new ArrayList<RiverMap>();
+        children = new ArrayList<RiverMap>();
         outflows = new ArrayList<RiverEdge>();
         type = 0;
         point = new Point(0,0);
@@ -18,6 +20,7 @@ public class RiverMap {
 
     public RiverMap(Point p){
         parents = new ArrayList<RiverMap>();
+        children = new ArrayList<RiverMap>();
         outflows = new ArrayList<RiverEdge>();
         type = 0;
         point = p;

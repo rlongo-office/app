@@ -169,6 +169,10 @@ public class TerrainService {
         ImageIO.write(img, "png", f);
     }
 
+    //check each river point in relation to surrounding points and determine endpoint status and exit,entry points
+    //1.get pixel box for current river point - test if origin, destination, or pass-through river point
+    //conditions - connected to estuary point = destination; river with only one (or none) connecting river point AND
+    //not connected to estuary point = origin; if not the other 2, the equals a pass-through
     public int analyzeRivers(String bigFileName, int bigXPos, int bigYPos, int smallWidth, int smallHeight) throws IOException {
         //bigFileName = "C:\\development\\maps\\faerun.6.10.small.gif";
         Map<Integer, RiverMap> riverMaps = new HashMap<>();
@@ -204,15 +208,26 @@ public class TerrainService {
          */
         //Flag all the rivers first
         for (RiverMap r : riverMaps.values()){
-            //check each river point in relation to surrounding points and determine endpoint status and exit,entry points
-            //1.get pixel box for current river point - test if origin, destination, or pass-through river point
-            //conditions - connected to estuary point = destination; river with only one (or none) connecting river point AND
-            //not connected to estuary point = origin; if not the other 2, the equals a pass-through
             pixelBox = getPixelBox(bigMapPixels,r.getPoint().getX(),r.getPoint().getY(),bigWidth,bigHeight);
+            r.setType(setRiverEndPointFlag(pixelBox));
+        }
+        //Now we interate again to find the origin points and traverse the river to either a river point with destination
+        // OR we another River point that already has a parent, and we had to that points parent list
+        for (RiverMap r : riverMaps.values()){
+            if (r.getType() == 1){  //we have a river origin
+                traverseRiver(r, bigMapPixels,riverMaps);
+            }
+
             r.setType(setRiverEndPointFlag(pixelBox));
         }
         //Now
             return 1;
+    }
+
+    private void traverseRiver(RiverMap r, int[][] bigMapPixels, Map<Integer, RiverMap> riverMaps) {
+        //get the pixelBox for this RiverMap Object
+        //Have parent(s)? Then disregard that parent point in the pixelBox
+        //Set all other adjacent River pixels as children UNLESS they already have parent(s)
     }
 
 
