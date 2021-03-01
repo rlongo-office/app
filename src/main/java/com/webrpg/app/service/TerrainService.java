@@ -94,19 +94,22 @@ public class TerrainService {
     //1.get pixel box for current river point - test if origin, destination, or pass-through river point
     //conditions - connected to estuary point = destination; river with only one (or none) connecting river point AND
     //not connected to estuary point = origin; if not the other 2, the equals a pass-through
-    public int analyzeRivers(String bigFileName, int bigXPos, int bigYPos, int smallWidth, int smallHeight) throws IOException {
+    //Update, we are going to use elevation now to determine flow direction and entry and exit edges for
+    public int analyzeRivers(String bigMapFileName, String elevationMapFile, int bigXPos, int bigYPos, int smallWidth, int smallHeight) throws IOException {
         //bigFileName = "C:\\development\\maps\\faerun.6.10.small.gif";
         Map<Integer, RiverMap> riverMaps = new HashMap<>();
         int[][] pixelBox = new int[3][3];   //holds pixel colors of adjacent orthogonal and diagonal terrain
-        BufferedImage bigMapImage, smallMapImage;
+        BufferedImage bigMapImage, evelMapImage;
         Integer terrainColor = 0x000000;
         //Load image File
-        bigMapImage = ImageIO.read(new File(bigFileName));
-        //Get width and height (x and y) for the image
+        bigMapImage = ImageIO.read(new File(bigMapFileName));
+        evelMapImage = ImageIO.read(new File(elevationMapFile));
+        //Get width and height (x and y) for the bigMap and evelMap images
         int bigWidth = bigMapImage.getWidth();
         int bigHeight = bigMapImage.getHeight();
         //Nested loop for x and y coordinates
         int[][] bigMapPixels = new int[bigWidth][bigHeight];
+        int [][] evelPixels = new int[bigWidth][bigHeight];
         for (int h = 0; h < bigHeight; h++) {
             for (int w = 0; w < bigWidth; w++) {
                 //Load Terrain (color) values into pixel array
@@ -120,6 +123,14 @@ public class TerrainService {
                      */
                     riverMaps.put(w*expo+h,new RiverMap(new Point(w,h)));
                 }
+            }
+        }
+        //Get and store elevation pixels
+        for (int h = 0; h < bigHeight; h++) {
+            for (int w = 0; w < bigWidth; w++) {
+                //Load evelation (color) values into pixel array
+                terrainColor = (bigMapImage.getRGB(w, h) & 0x00FFFFFF);     //strip off the alpha, leaves only RGB
+                evelPixels[w][h] = terrainColor;
             }
         }
         /*
