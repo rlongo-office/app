@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.*;
 import java.util.List;
+import java.util.Arrays;
 
 import com.webrpg.app.model.derived.RiverMap;
 import com.webrpg.app.model.derived.Point;
@@ -47,7 +48,7 @@ public class TerrainService {
     Below is the RGB values for the map elevations gradiant, starting with 0 and increasing incrementally by 100 up to 30000.  In the future, for elevations above 30K feet, will use
     Alpha value as a multiplier,so 1x for 0-30k, 2x for 30100 to 60K, etc.  Same for the seaTopoColors only in reverse (depth measurements)
      */
-    public int[] topoColors = {744734,1929010,2849086,3506246,4032077,4492114,4951895,5280346,5608798,5871713,6134372,6397030,6594153,6856811,7053933,7185519,7382384,7513970,
+    ArrayList<Integer> topoColors = new ArrayList<Integer>(Arrays.asList(744734,1929010,2849086,3506246,4032077,4492114,4951895,5280346,5608798,5871713,6134372,6397030,6594153,6856811,7053933,7185519,7382384,7513970,
             7710836,7842165,7973750,8105080,8236409,8367738,8499068,8630397,8696190,8827519,8893312,9024641,9090434,9221507,9287300,9418629,9484421,9549958,9615751,9747080,9812616,
             9878409,9944202,10009739,10075531,10141068,10206861,10272653,10338190,10403983,10469519,10535312,10600848,10666641,10732177,10797970,10797971,10863763,10929300,10995092,
             11060629,11060630,11126431,11191958,11257750,11257751,11323287,11389080,11389081,11454873,11520409,11520410,11586202,11651738,11651739,11717531,11783068,11783069,11848860,
@@ -62,9 +63,9 @@ public class TerrainService {
             15329468,15329469,15329470,15329471,15395005,15395006,15395007,15395008,15460797,15460798,15460799,15460800,15460801,15526334,15526335,15526336,15526337,15591870,15592126,
             15592127,15592128,15592129,15657663,15657664,15657665,15657666,15657667,15723199,15723455,15723456,15723457,15788992,15788993,15788994,15788995,15788996,15854528,15854529,
             15854785,15854786,15854787,15920321,15920322,15920323,15920324,15985857,15985858,15985859,15985860,15986114,16051650,16051651,16051652,16051653,16051654,16117186,16117187,
-            16117188,16117189,16117190,16182979,16182980,16182981,16182982,16182983,16248515,16248516,16248517,16248518,16248519,16314052,16314308 };
+            16117188,16117189,16117190,16182979,16182980,16182981,16182982,16182983,16248515,16248516,16248517,16248518,16248519,16314052,16314308));
 
-    public int[] seaTopoColors = { 7259388,7193337,7127287,7061493,6995443,6929393,6863599,6797549,6731755,6665448,6599654,6533604,6467810,6401760,6335966,6269916,6204122,6137815,6072021,
+    public Integer[] seaTopoColors = { 7259388,7193337,7127287,7061493,6995443,6929393,6863599,6797549,6731755,6665448,6599654,6533604,6467810,6401760,6335966,6269916,6204122,6137815,6072021,
             6005971,5940177,5874127,5808077,5742283,5676233,5610439,5544132,5478338,5412288,5346494,5280444,5214650,5148600,5148342,5016499,4950705,4884655,4818861,4752811,4752297,4686503,
             4620453,4488866,4422816,4357022,4356508,4290714,4224664,4158870,4092820,4027026,3960719,3894925,3828875,3763081,3697031,3630981,3565187,3499137,3433086,3367036,3301242,3235192,
             3169398,3103348,3037554,2971504,2905453,2839403,2773609,2707559,2641765,2641251,2575201,2509407,2443357,2377306,2311256,2245462,2179412,2113618,2047568,1981774,1915724,1849673,
@@ -90,11 +91,8 @@ public class TerrainService {
     }
 
 
-    //check each river point in relation to surrounding points and determine endpoint status and exit,entry points
-    //1.get pixel box for current river point - test if origin, destination, or pass-through river point
-    //conditions - connected to estuary point = destination; river with only one (or none) connecting river point AND
-    //not connected to estuary point = origin; if not the other 2, the equals a pass-through
-    //Update, we are going to use elevation now to determine flow direction and entry and exit edges for
+    //check each river point in relation to surrounding points and determine inflow and outflow for individual river
+    //terrain maps; we are going to use elevation now to determine flow direction and entry and exit edges for each map
     public int analyzeRivers(String bigMapFileName, String elevationMapFile, int bigXPos, int bigYPos, int smallWidth, int smallHeight) throws IOException {
         //bigFileName = "C:\\development\\maps\\faerun.6.10.small.gif";
         Map<Integer, RiverMap> riverMaps = new HashMap<>();
@@ -109,7 +107,7 @@ public class TerrainService {
         int bigHeight = bigMapImage.getHeight();
         //Nested loop for x and y coordinates
         int[][] bigMapPixels = new int[bigWidth][bigHeight];
-        int [][] evelPixels = new int[bigWidth][bigHeight];
+        int [][] evelation = new int[bigWidth][bigHeight];
         for (int h = 0; h < bigHeight; h++) {
             for (int w = 0; w < bigWidth; w++) {
                 //Load Terrain (color) values into pixel array
@@ -128,9 +126,9 @@ public class TerrainService {
         //Get and store elevation pixels
         for (int h = 0; h < bigHeight; h++) {
             for (int w = 0; w < bigWidth; w++) {
-                //Load evelation (color) values into pixel array
+                //Load elevation (color) values into pixel array
                 terrainColor = (bigMapImage.getRGB(w, h) & 0x00FFFFFF);     //strip off the alpha, leaves only RGB
-                evelPixels[w][h] = terrainColor;
+                evelation[w][h] = (topoColors.indexOf(terrainColor)-1)*100;   //topo array holds array of 300 colors that represent elevation from 0 to 30K feet
             }
         }
         /*
