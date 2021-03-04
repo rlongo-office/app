@@ -27,7 +27,7 @@ public class TerrainService {
     private Map<Integer, Integer> topoMap;
     private int expo = 10;  //for our point conversion to key values for hashmap use
     private double maxRiverWidth = .99;    //The maximum width of a river edge as percentage of tactical map edge length
-    private double minRiverWidth = .30;    //The maximum width of a river edge as percentage of tactical map edge length
+    private double minRiverWidth = .10;    //The maximum width of a river edge as percentage of tactical map edge length
     //Constants
     private static final int RIVER_ORIG= 1;
     private static final int RIVER_DEST = 2;
@@ -145,6 +145,7 @@ public class TerrainService {
         // OR we hit another River point that already has a parent
         for (RiverMap r : riverMaps.values()){
             if (r.getType() == RIVER_ORIG){  //we have a river origin
+                System.out.println("Traversing river from Origin point " + r.getPoint().getX() + "," + r.getPoint().getY());
                 traverseRiver(r, bigMapPixels,riverMaps,smallWidth);
             }
         }
@@ -186,10 +187,11 @@ public class TerrainService {
                                 case 21: curRM.addEdge(new Point(mapWidth-1,axisValue),edgeWidth,RiverMap.EAST); break;       // (2.1) is Eastern adj. Child
                                 case 12: curRM.addEdge(new Point(axisValue,mapWidth-1),edgeWidth,RiverMap.SOUTH); break;      // (1.2) is Southern adj. Child
                                 case 1: curRM.addEdge(new Point(0,axisValue),edgeWidth,RiverMap.WEST); break;                 // (0,1) is western adj child
-                                default: System.out.println("Not an orthogonally adjacent River point"); break;
+                                default: System.out.println("Error: Not an orthogonally adjacent River point"); break;
                             }
                             //Now recursive call on Child, traversing down this river path until we hit an end point or the edge of map. The varies
                             // branches from the origin
+                            System.out.println("Traversing river from child point " + adjRiver.getPoint().getX() + "," + adjRiver.getPoint().getY());
                             traverseRiver(adjRiver, bigMapPixels, riverMaps,mapWidth);
                         }
                     }
