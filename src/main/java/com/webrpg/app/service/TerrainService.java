@@ -32,16 +32,18 @@ public class TerrainService {
     private static final int RIVER_ORIG= 1;
     private static final int RIVER_DEST = 2;
     private static final int RIVER_CONN = 0;
+    //For debug use
+    private int riverPointsTraversed;
 
     private String[] terrNames = {
             "BEACH", "BOG", "CLEARED", "DESERT", "ESTUARY", "FARMLAND", "CON_FOREST", "DEC_FOREST", "GLACIER", "GRASSLAND", "JUNGLE",
             "LAKE", "LAVA", "MARSH", "OCEAN", "RAPIDS", "REEF", "RIVER", "ROAD", "ROCKY", "SALT_LAKE", "SAND_DUNES", "SCORCHED_EARTH", "SILT_BED",
-            "SINK_HOLE", "SWAMP", "VOLCANIC"
+            "SINK_HOLE", "SWAMP", "VOLCANIC","RIVER_SOURCE"
     };
 
     public int[] terrColors = {0xFFD700, 0x20B2AA, 0xD3D3D3, 0xF5DEB3, 0x008080, 0x6B8E23, 0x006400, 0x008000,
             0x00BFFF, 0x9ACD32, 0x7CFC00, 0x0000FF, 0x800000, 0x3CB371, 0x00008B, 0x8B008B, 0x00CED1,
-            0x0054A6, 0xFFF5EE, 0xA9A9A9, 0xB0C4DE, 0xF0E68C, 0x663300, 0xF5F5DC, 0x404040, 0x8FBC8F, 0xB22222};
+            0x0054A6, 0xFFF5EE, 0xA9A9A9, 0xB0C4DE, 0xF0E68C, 0x663300, 0xF5F5DC, 0x404040, 0x8FBC8F, 0xB22222, 0x022B52};
 
     /*
     Checking Github push capabilities with a simple file change as comment
@@ -97,15 +99,14 @@ public class TerrainService {
     terrain maps; we are going to use elevation now to determine flow direction and entry and exit edges for each map
      */
     public int analyzeRivers(String bigMapFileName, String elevationMapFile, int bigXPos, int bigYPos, int smallWidth, int smallHeight) throws IOException {
-        //bigFileName = "C:\\development\\maps\\faerun.6.10.small.gif";
         Map<Integer, RiverMap> riverMaps = new HashMap<>();
         int[][] pixelBox = new int[3][3];   //holds pixel colors of adjacent orthogonal and diagonal terrain
-        BufferedImage bigMapImage, evelMapImage;
+        BufferedImage bigMapImage, elevMapImage;
         Integer terrainColor = 0x000000;
         RiverMap tempRiverMap = new RiverMap();
-        //Load image File
+        //Load image Files
         bigMapImage = ImageIO.read(new File(bigMapFileName));
-        evelMapImage = ImageIO.read(new File(elevationMapFile));
+        elevMapImage = ImageIO.read(new File(elevationMapFile));
         //Get width and height (x and y) for the bigMap and evelMap images
         int bigWidth = bigMapImage.getWidth();
         int bigHeight = bigMapImage.getHeight();
@@ -117,13 +118,14 @@ public class TerrainService {
         for (int h = 0; h < bigHeight; h++) {
             for (int w = 0; w < bigWidth; w++) {
                 //Load elevation (color) values into pixel array
-                terrainColor = (bigMapImage.getRGB(w, h) & 0x00FFFFFF);     //strip off the alpha, leaves only RGB
-                elevation[w][h] = (topoColors.indexOf(terrainColor)-1)*100;   //topo array holds array of 300 colors that represent elevation from 0 to 30K feet
+                terrainColor = (elevMapImage.getRGB(w, h) & 0x00FFFFFF);     //strip off the alpha, leaves only RGB
+                System.out.println(topoColors.indexOf(terrainColor) * 100 + " elevation for: " + w + "," + h);
+                elevation[w][h] = topoColors.indexOf(terrainColor) * 100;   //topo array holds array of 300 colors that represent elevation from 0 to 30K feet
             }
         }
 
         for (int h = 0; h < bigHeight; h++) {
-            for (int w = 0; w < bigWidth; w++) {
+           for (int w = 0; w < bigWidth; w++) {
                 //Load Terrain (color) values into pixel array
                 terrainColor = (bigMapImage.getRGB(w, h) & 0x00FFFFFF);     //strip off the alpha, leaves only RGB
                 bigMapPixels[w][h] = terrainColor;
@@ -135,25 +137,34 @@ public class TerrainService {
                      */
                     riverMaps.put(w*expo+h,new RiverMap(new Point(w,h)));
                     tempRiverMap = riverMaps.get(w*expo + h);
-                    pixelBox = getPixelBox(bigMapPixels,w,h,bigWidth,bigHeight);
-                    tempRiverMap.setType(setRiverEndPointFlag(pixelBox));
                     tempRiverMap.setElevation(elevation[w][h]);
                 }
             }
         }
+        int loopflag = 0;
+        for (RiverMap r : riverMaps.values()){
+            loopflag++;
+            pixelBox = getPixelBox(bigMapPixels,r.getPoint().getX(),r.getPoint().getY(),bigWidth,bigHeight);
+            System.out.println("Loop: " + loopflag + " Setting River enpoint for point " + r.getPoint().getX() + "," + r.getPoint().getY());
+            r.setType(setRiverEndPointFlag(pixelBox));
+        }
+
         //Now we iterate again to find the origin points and traverse the river to either a river point with destination
         // OR we hit another River point that already has a parent
+        riverPointsTraversed = 0;
         for (RiverMap r : riverMaps.values()){
             if (r.getType() == RIVER_ORIG){  //we have a river origin
                 System.out.println("Traversing river from Origin point " + r.getPoint().getX() + "," + r.getPoint().getY());
                 traverseRiver(r, bigMapPixels,riverMaps,smallWidth);
             }
         }
+        System.out.println("River Points Traversed: " + riverPointsTraversed);
         //We need to serialize this HashMap to load the information back when we need to generate terrain on the fly.
             return 1;
     }
 
     private void traverseRiver(RiverMap curRM, int[][] bigMapPixels, Map<Integer, RiverMap> riverMaps, int mapWidth) {
+        riverPointsTraversed++; //for debug
         SecureRandom rand = new SecureRandom();
         Point edgePoint = new Point();
         int bigWidth = bigMapPixels.length;
@@ -169,7 +180,7 @@ public class TerrainService {
         for (int x = 0; x < pixelBox.length; x++) {
             for (int y = 0; y < pixelBox[0].length; y++) {
                 //We just want orthogonally adjacent  river points to connect
-                if ((x+y)%2!=0 && x != y) {  //for a 3,3 matrix, adjacent orthogonals are (1,0), (0,1), (2,1), (1,2)
+                if (((x+y)&1)!=0 && pixelBox[x][y] !=0) {  //for a 3,3 matrix, adjacent orthogonals are (1,0), (0,1), (2,1), (1,2)
                     if (terrMap.getKey(pixelBox[x][y]).equals("RIVER")) {
                         int adjX = riverX + x - 1;
                         int adjY = riverY + y - 1;
@@ -178,9 +189,10 @@ public class TerrainService {
                         //adjRivers at lower elevations OR at same elevation AND don't have Parent are added as a child point
                         if (adjElevation < curElevation || (adjElevation==curElevation && adjRiver.getParents().isEmpty())){
                             //***add adjRiver to child list for current River Point
-                            curRM.getChildren().add(adjRiver);
+                            curRM.getChildren().add(adjRiver);  //current River point adds a child
+                            adjRiver.getParents().add(curRM);   //adjacent  adds the current River Point as a parent
                             //***add outflow edge aligned to adj Child
-                            edgeWidth = mapWidth * (int) (rand.nextDouble()*(maxRiverWidth-minRiverWidth)+ minRiverWidth); //ok to lose precision here
+                            edgeWidth = (int) (mapWidth * (rand.nextDouble()*(maxRiverWidth-minRiverWidth)+ minRiverWidth)); //ok to lose precision here
                             int axisValue = (mapWidth-edgeWidth)/2; //ok to lose precision here. Effectively splits distance from map edge to each side of river equally
                             switch(x*expo+y){
                                 case 10: curRM.addEdge(new Point(axisValue,0),edgeWidth,RiverMap.NORTH); break;               // (1.0) is Northern adj. Child
@@ -208,8 +220,11 @@ public class TerrainService {
         pixelBox[1][1] = 0;
         for (int x = 0; x < pixelBox.length; x++) {
             for (int y = 0; y < pixelBox[0].length; y++) {
-                    if (terrMap.getKey(pixelBox[x][y]).equals("ESTUARY")) return RIVER_DEST;  //we have a 'destination' map
-                    if (terrMap.getKey(pixelBox[x][y]).equals("RIVER")) adjRivers+=1;
+                if (((x+y) & 1)!= 0 && pixelBox[x][y] != 0) {  //for a 3,3 matrix, adjacent orthogonals are (1,0), (0,1), (2,1), (1,2)
+                    if (terrMap.getKey(pixelBox[x][y]).equals("ESTUARY"))
+                        return RIVER_DEST;  //we have a 'destination' map
+                    if (terrMap.getKey(pixelBox[x][y]).equals("RIVER")) adjRivers += 1;
+                }
                 }
             }
         //Below because we define an 'origin' river point as one with only one adjacent river point (for simplicity)...
