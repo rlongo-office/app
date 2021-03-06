@@ -25,7 +25,7 @@ public class TerrainService {
     private double adjCornWeight;
     private double generalWeight;
     private Map<Integer, Integer> topoMap;
-    private int expo = 10;  //for our point conversion to key values for hashmap use
+    private int expo = 10000;  //for our point conversion to key values for hashmap use
     private double maxRiverWidth = .99;    //The maximum width of a river edge as percentage of tactical map edge length
     private double minRiverWidth = .10;    //The maximum width of a river edge as percentage of tactical map edge length
     //Constants
@@ -34,12 +34,12 @@ public class TerrainService {
     private static final int RIVER_CONN = 0;
     //For debug use
     private int riverPointsTraversed;
+    private  Map<Integer,Integer> travPoints = new HashMap<>();
 
     private String[] terrNames = {
             "BEACH", "BOG", "CLEARED", "DESERT", "ESTUARY", "FARMLAND", "CON_FOREST", "DEC_FOREST", "GLACIER", "GRASSLAND", "JUNGLE",
             "LAKE", "LAVA", "MARSH", "OCEAN", "RAPIDS", "REEF", "RIVER", "ROAD", "ROCKY", "SALT_LAKE", "SAND_DUNES", "SCORCHED_EARTH", "SILT_BED",
-            "SINK_HOLE", "SWAMP", "VOLCANIC","RIVER_SOURCE"
-    };
+            "SINK_HOLE", "SWAMP", "VOLCANIC","RIVER_SOURCE"};
 
     public int[] terrColors = {0xFFD700, 0x20B2AA, 0xD3D3D3, 0xF5DEB3, 0x008080, 0x6B8E23, 0x006400, 0x008000,
             0x00BFFF, 0x9ACD32, 0x7CFC00, 0x0000FF, 0x800000, 0x3CB371, 0x00008B, 0x8B008B, 0x00CED1,
@@ -119,7 +119,7 @@ public class TerrainService {
             for (int w = 0; w < bigWidth; w++) {
                 //Load elevation (color) values into pixel array
                 terrainColor = (elevMapImage.getRGB(w, h) & 0x00FFFFFF);     //strip off the alpha, leaves only RGB
-                System.out.println(topoColors.indexOf(terrainColor) * 100 + " elevation for: " + w + "," + h);
+                //System.out.println(topoColors.indexOf(terrainColor) * 100 + " elevation for: " + w + "," + h);
                 elevation[w][h] = topoColors.indexOf(terrainColor) * 100;   //topo array holds array of 300 colors that represent elevation from 0 to 30K feet
             }
         }
@@ -130,7 +130,7 @@ public class TerrainService {
                 terrainColor = (bigMapImage.getRGB(w, h) & 0x00FFFFFF);     //strip off the alpha, leaves only RGB
                 bigMapPixels[w][h] = terrainColor;
                 //If we have a river point, this will require special processing. Collect these points for later work
-                if (terrMap.getKey(bigMapPixels[w][h]).equals("RIVER")){
+                if (terrMap.getKey(bigMapPixels[w][h]).contains("RIVER")){
                     /*
                     Rather than create a multidimensional hashmap to key against a Point, using some math to create the
                     key from x, and y value, in this case int key = i*E + j.  It follows that i=key/E and j=key%E
@@ -138,9 +138,12 @@ public class TerrainService {
                     riverMaps.put(w*expo+h,new RiverMap(new Point(w,h)));
                     tempRiverMap = riverMaps.get(w*expo + h);
                     tempRiverMap.setElevation(elevation[w][h]);
+                    if (terrMap.getKey(bigMapPixels[w][h]).equals("RIVER_SOURCE"))
+                        tempRiverMap.setType(RIVER_ORIG);
                 }
             }
         }
+        /* May not be required as we are setting Origin points by color
         int loopflag = 0;
         for (RiverMap r : riverMaps.values()){
             loopflag++;
@@ -148,6 +151,7 @@ public class TerrainService {
             System.out.println("Loop: " + loopflag + " Setting River enpoint for point " + r.getPoint().getX() + "," + r.getPoint().getY());
             r.setType(setRiverEndPointFlag(pixelBox));
         }
+         */
 
         //Now we iterate again to find the origin points and traverse the river to either a river point with destination
         // OR we hit another River point that already has a parent
@@ -158,6 +162,14 @@ public class TerrainService {
                 traverseRiver(r, bigMapPixels,riverMaps,smallWidth);
             }
         }
+        int pointTest = 0;
+        for (RiverMap r : riverMaps.values()){
+            pointTest = r.getPoint().getX()*expo+ r.getPoint().getY();
+            if (!travPoints.containsValue(pointTest)){  //we have a river origin
+                System.out.println("This point was not traversed: " + r.getPoint().getX() + "," + r.getPoint().getY());
+            }
+        }
+
         System.out.println("River Points Traversed: " + riverPointsTraversed);
         //We need to serialize this HashMap to load the information back when we need to generate terrain on the fly.
             return 1;
@@ -173,9 +185,11 @@ public class TerrainService {
         int riverY = curRM.getPoint().getY();
         int curElevation = curRM.getElevation();
         int edgeWidth;
+        travPoints.put(riverPointsTraversed,riverX*expo+riverY);
         int[][] pixelBox = new int[3][3];
         //get the pixelBox for this RiverMap Object
         pixelBox = getPixelBox(bigMapPixels,riverX,riverY,bigWidth,bigHeight);
+        pixelBox[0][0] = 0;   //this is the current Point, not need to test for it
         //Loop through pixel box - for each adjacent River without a parent, add that adjacent River
         for (int x = 0; x < pixelBox.length; x++) {
             for (int y = 0; y < pixelBox[0].length; y++) {
@@ -194,7 +208,7 @@ public class TerrainService {
                             //***add outflow edge aligned to adj Child
                             edgeWidth = (int) (mapWidth * (rand.nextDouble()*(maxRiverWidth-minRiverWidth)+ minRiverWidth)); //ok to lose precision here
                             int axisValue = (mapWidth-edgeWidth)/2; //ok to lose precision here. Effectively splits distance from map edge to each side of river equally
-                            switch(x*expo+y){
+                            switch(x*10+y){
                                 case 10: curRM.addEdge(new Point(axisValue,0),edgeWidth,RiverMap.NORTH); break;               // (1.0) is Northern adj. Child
                                 case 21: curRM.addEdge(new Point(mapWidth-1,axisValue),edgeWidth,RiverMap.EAST); break;       // (2.1) is Eastern adj. Child
                                 case 12: curRM.addEdge(new Point(axisValue,mapWidth-1),edgeWidth,RiverMap.SOUTH); break;      // (1.2) is Southern adj. Child
