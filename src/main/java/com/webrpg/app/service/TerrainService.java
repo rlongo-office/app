@@ -1,19 +1,19 @@
 package com.webrpg.app.service;
 
+import com.webrpg.app.model.derived.Point;
+import com.webrpg.app.model.derived.RiverMap;
+import org.apache.commons.collections4.BidiMap;
+import org.apache.commons.collections4.bidimap.DualHashBidiMap;
+
 import javax.imageio.ImageIO;
 import java.awt.*;
-import java.awt.image.*;
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferInt;
 import java.io.File;
 import java.io.IOException;
 import java.security.SecureRandom;
-import java.util.*;
 import java.util.List;
-import java.util.Arrays;
-
-import com.webrpg.app.model.derived.RiverMap;
-import com.webrpg.app.model.derived.Point;
-import org.apache.commons.collections4.BidiMap;
-import org.apache.commons.collections4.bidimap.DualHashBidiMap;
+import java.util.*;
 
 public class TerrainService {
 
@@ -24,6 +24,7 @@ public class TerrainService {
     private double adjOrthWeight;
     private double adjCornWeight;
     private double generalWeight;
+    private int mapYDimension;
     private Map<Integer, Integer> topoMap;
     private int expo = 10000;  //for our point conversion to key values for hashmap use
     private double maxRiverWidth = .99;    //The maximum width of a river edge as percentage of tactical map edge length
@@ -76,7 +77,10 @@ public class TerrainService {
             1783623,1717829,1651779,1585985,1585471,1519421,1453627,1387576,1321526,1255476,1189682,1123632,1057838,991788,991530,925480};
 
 
-
+    public TerrainService(int mapYDimension){
+        this();
+        this.mapYDimension = mapYDimension;
+    }
     public TerrainService() {
         for (int id = 0; id < terrNames.length; id++) {
             terrMap.put(terrNames[id], terrColors[id]);
@@ -94,6 +98,15 @@ public class TerrainService {
         generalWeight = 0.035;
     }
 
+    public void testImageDrawOverlay(String target, String source) throws IOException {
+        BufferedImage imgTarget = ImageIO.read(new File(target));
+        BufferedImage imgSource = ImageIO.read(new File(source));
+        Graphics2D g = (Graphics2D) imgTarget.getGraphics();
+        g.drawImage(imgSource, 10, 10, null);
+        g.drawImage(imgSource,0,0,899,600,0,0,1772,1160,null);
+        File newImageFile = new File("C:\\development\\maps\\newOverLay.png");
+        ImageIO.write(imgTarget, "png", newImageFile);
+    }
 
     /*check each river point in relation to surrounding points and determine inflow and outflow for individual river
     terrain maps; we are going to use elevation now to determine flow direction and entry and exit edges for each map
@@ -245,6 +258,30 @@ public class TerrainService {
         if (adjRivers > 1) return RIVER_CONN;
         return RIVER_ORIG;  //we have an origin, since it was not adj to estuary and no more than 1 other river point
     }
+    public int generateTacticalMap(String bigFileName, int xPos, int yPos, int smallWidth, int smallHeight) throws IOException {
+        //Calculate unique random seed for this tactical map generation
+        double randSeed = getTerrainSeed(xPos,yPos);
+        //Lay background terrain for tactical ( or “small”) map This is now a large 25Kx25k pixel jpg
+        BufferedImage bigMapImage, smallMapImage;
+        bigMapImage = ImageIO.read(new File(bigFileName));
+        int[][] pixelBox = getPixelBox(bigMapImage,3,3);
+        int terrainColor = (bigMapImage.getRGB(xPos, yPos) & 0x00FFFFFF);     //strip off the alpha, leaves only RGB
+        //        -	If shoreline map (lake or ocean shore) orient correct map background
+        // If river map, assemble river tiles according to river network size and direction
+        //        -	Load river map file corresponding to river map coordinate for this small map
+        //-	complementary background image objects)
+        //For Road, shoreline (ocean or lake shore), or river calculate (or have predetermine) remaining allowable land regions of map for map enhancement
+        //Loop through map coordinates (0<=x<1000; 0<=y<1000)
+        //Lay objects (shrubs, rocks, flowers, ground patches, alternate tile, etc)
+        //EndLoop
+        //If Forest (deciduous, conifer, jungle)…
+        //…Loop through map coordinates (0<=x<1000; 0<=y<1000)
+        //Lay trees by forest type and probability
+        //        EndLoop
+        return 1;
+    }
+
+
 
     //bigXPos, bigYPos is the position of regional(biggie) section on the world map; smallWidth and smallHeight set the
     //size of the tactical (small) map to be generated from each point (pixel) we read on the biggie map. In our first case
@@ -252,6 +289,7 @@ public class TerrainService {
     // (standard for many tactical tabletop square dimensions) then we will need the small map to be 5000/5 = 1000 pixels squared
     public int generateTerrain(String bigFileName, int bigXPos, int bigYPos, int smallWidth, int smallHeight) throws IOException {
         //bigFileName = "C:\\development\\maps\\faerun.6.10.small.gif";
+        double randSeed = getTerrainSeed(bigXPos,bigYPos);
         List<RiverMap> riverMaps = new ArrayList<>();
         String fileStub = "C:\\development\\maps\\faerun.";
         int[][] pixelBox = new int[3][3];   //holds pixel colors of adjacent orthogonal and diagonal terrain
@@ -295,6 +333,12 @@ public class TerrainService {
         }
         //End Loop
         return 1;
+    }
+    //Separating the seed calc from the terrain generation in case we want to change method
+    private int getTerrainSeed(int bigXPos, int bigYPos) {
+        //given two numbers between 0 and n, create a unique number for any point in matrix {nxn}
+        //may be better way but simply going to shift one coordinate over by max number of digits in second coordinate
+        return bigXPos*10^mapYDimension+bigYPos;
     }
     /*
     There needs to be a secondary process after the terran has been calculated that then overlays roads and rivers. Both
@@ -430,6 +474,39 @@ public class TerrainService {
     //in our returned int array will not correspond to a color (the position they reference doesnt exist) and we just
     //keep int - 0x0000
     //***Note I dont like this if then logic.  There are redundant tests performed for height
+    private int[][] getPixelBox(BufferedImage img,int x, int y ){
+        int[][] pixelBox = {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}};   //prefill with black, which equals "no adjacent pixel at x,y position"
+        int maxRight = img.getWidth()-1;      //farthest most x position
+        int maxBottom = img.getHeight()-1;    //farthest most y position
+        pixelBox[1][1] = (img.getRGB(x, y) & 0x00FFFFFF);          //1.1 position always filled - it is the main selector color
+        if (x != 0) {                                              //Test if this is not a left border pixel on the biggy map
+            pixelBox[0][1] = (img.getRGB(x-1, y) & 0x00FFFFFF);               //Left center pixel filled
+            if (y != 0) {                                                       //Test if this is not a top border pixel on the biggy map
+                pixelBox[0][0] = (img.getRGB(x-1, y-1) & 0x00FFFFFF);    //top left corner pixel filled
+            }
+            if (y != maxBottom) {                                   //Test if this is not a bottom border pixel on the biggy map
+                pixelBox[0][2] = (img.getRGB(x-1, y+1) & 0x00FFFFFF);         //bottom left corner pixel filled
+            }
+        }
+        //***test for right positions ***/
+        if (x != maxRight) {
+            pixelBox[2][1] = (img.getRGB(x+1, y) & 0x00FFFFFF);             //right center pixel filled
+            if (y != 0) {                                                      //this is not a top border pixel on the biggy map
+                pixelBox[2][0] = (img.getRGB(x+1, y-1) & 0x00FFFFFF);    //top right corner pixel filled
+            }   //this is not a top border pixel
+            if (y != maxBottom) {                                              //this is not a bottom border pixel on the biggy map
+                pixelBox[2][2] = (img.getRGB(x+1, y+1) & 0x00FFFFFF);    //bottom right corner pixel filled
+            }
+        }
+        if (y != 0) {                                                           //this is not a top row pixel on the biggy map
+            pixelBox[1][0] = (img.getRGB(x, y-1) & 0x00FFFFFF);              //top center corner pixel filled
+        }
+        if (y != maxBottom) {                                                   //this is not a bottom row pixel on the biggy map
+            pixelBox[1][2] = (img.getRGB(x, y+1) & 0x00FFFFFF);              //bottom center pixel filled
+        }
+        return pixelBox;
+    }
+
     private int[][] getPixelBox(int[][] bigMapPixels, int w, int h, int bigWidth, int bigHeight) {
         int[][] pixelBox = {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}};   //prefill with black, which equals "no adjacent pixel at x,y position"
         int maxRight = bigWidth-1;      //farthest most x position
@@ -509,33 +586,34 @@ public class TerrainService {
     }
 
     double[][] terrWeight = {
-            {950, 0, 0, 0, 0, 0, 0, 0, 0, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            {0, 800, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 150, 0},
-            {0, 0, 1000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 700, 0, 0, 0, 0, 0, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 0, 50, 0, 100, 0, 0, 0},
-            {0, 0, 0, 0, 800, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 0, 0, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 900, 0, 50, 0, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 900, 50, 0, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 100, 800, 0, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0, 0, 1000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0, 100, 0, 850, 0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 0, 0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 950, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            {25, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 900, 0, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 25, 0},
-            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 900, 0, 0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 0},
-            {100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 800, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 0},
-            {50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 950, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 900, 0, 50, 0, 50, 0, 0, 0, 0, 0, 0, 0},
-            {50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 950, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0, 0, 0,900, 0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 0, 0, 0, 50, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1000, 0, 0, 0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 900, 0, 0, 0, 50, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 900, 0, 0, 50, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 0, 950, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0, 0, 0, 25, 0, 0, 0, 0, 0, 0, 0, 0, 0, 75, 0, 0, 900, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 0, 0, 0, 900, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 0, 0, 0, 0, 950, 0, 0},
-            {0, 150, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 150, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 700, 0},
-            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 0, 0, 0, 0, 0, 0, 950}
+            {950, 0, 0, 0, 0, 0, 0, 0, 0, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0},
+            {0, 800, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 150, 0,0},
+            {0, 0, 1000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0},
+            {0, 0, 0, 700, 0, 0, 0, 0, 0, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 0, 50, 0, 100, 0, 0, 0,0},
+            {0, 0, 0, 0, 800, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 0, 0, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0,0},
+            {0, 0, 0, 0, 0, 900, 0, 50, 0, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0},
+            {0, 0, 0, 0, 0, 0, 900, 50, 0, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0},
+            {0, 0, 0, 0, 0, 0, 100, 800, 0, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 1000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0},
+            {0, 0, 0, 0, 0, 0, 0, 100, 0, 850, 0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 0, 0, 0, 0, 0, 0, 0,0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 950, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0},
+            {25, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 900, 0, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 25, 0,0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 900, 0, 0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 0,0},
+            {100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 800, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 0,0},
+            {50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 950, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 900, 0, 50, 0, 50, 0, 0, 0, 0, 0, 0, 0,0},
+            {50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 950, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0,900, 0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 0, 0, 0, 50, 0, 0, 0,0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1000, 0, 0, 0, 0, 0, 0, 0, 0,0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 900, 0, 0, 0, 50, 0, 0, 0,0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 900, 0, 0, 50, 0, 0, 0,0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 0, 950, 0, 0, 0, 0, 0,0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 25, 0, 0, 0, 0, 0, 0, 0, 0, 0, 75, 0, 0, 900, 0, 0, 0, 0,0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 0, 0, 0, 900, 0, 0, 0,0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 0, 0, 0, 0, 950, 0, 0,0},
+            {0, 150, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 150, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 700, 0,0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 0, 0, 0, 0, 0, 0, 950,0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0,900, 0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 0, 0, 0, 50, 0, 0, 0,0},
     };
 }
 
@@ -602,7 +680,16 @@ public class TerrainService {
             }
         }
 
-
+        //This method used when random result is provided
+        public int chooseColor(double result){
+            for (Map.Entry<Integer, Double> entry : trimmedSelector.entrySet()) {
+                if (result <= entry.getValue()){
+                    return entry.getKey();
+                }
+            }
+            return -1;
+        }
+        //This method used when we want the method to 'roll' the result
         public int chooseColor(){
             SecureRandom rand = new SecureRandom();
             double result = rand.nextDouble();
