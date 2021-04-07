@@ -54,6 +54,7 @@ public class TerrainService {
             "LAKE", "LAVA", "MARSH", "OCEAN", "RAPIDS", "REEF", "RIVER", "ROAD", "ROCKY", "SALT_LAKE", "SAND_DUNES", "SCORCHED_EARTH", "SILT_BED",
             "SINK_HOLE", "SWAMP", "VOLCANIC","RIVER_SOURCE"};
 
+    //Moving the following to a file load
     private String[] orientedTerrains = {"BEACH","LAKE","RIVER","RIVER_SOURCE","ROAD"};
     private String[] beachOriented = {"BEACHN","BEACHE","BEACHS","BEACHW","BEACHNE","BEACHES","BEACHSW","BEACHNW","BEACHNES","BEACHESW","BEACHNSW","BEACHNEW","BEACHNESW"};
     private String[] lakeOriented = {"LAKEN","LAKEE","LAKES","LAKEW","LAKENE","LAKEES","LAKESW","LAKENW","LAKENES","LAKEESW","LAKENSW","LAKENEW","LAKENESW"};
