@@ -1,5 +1,6 @@
 package com.webrpg.app.service;
 
+import com.webrpg.app.model.derived.ImageFile;
 import com.webrpg.app.model.derived.Point;
 import com.webrpg.app.model.derived.RiverMap;
 import org.apache.commons.collections4.BidiMap;
@@ -9,8 +10,13 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.SecureRandom;
 import java.util.List;
 import java.util.*;
@@ -24,8 +30,10 @@ public class TerrainService {
     private double adjOrthWeight;
     private double adjCornWeight;
     private double generalWeight;
+    private List<ImageFile> imageFiles;
     private int mapYDimension;
     private Map<Integer, Integer> topoMap;
+    private BidiMap<String,String> terrainFiles = new DualHashBidiMap<>(); ;
     private int expo = 10000;  //for our point conversion to key values for hashmap use
     private double maxRiverWidth = .99;    //The maximum width of a river edge as percentage of tactical map edge length
     private double minRiverWidth = .10;    //The maximum width of a river edge as percentage of tactical map edge length
@@ -33,6 +41,10 @@ public class TerrainService {
     private static final int RIVER_ORIG= 1;
     private static final int RIVER_DEST = 2;
     private static final int RIVER_CONN = 0;
+    private static final int NORTH= 1;
+    private static final int EAST= 10;
+    private static final int SOUTH= 100;
+    private static final int WEST= 1000;
     //For debug use
     private int riverPointsTraversed;
     private  Map<Integer,Integer> travPoints = new HashMap<>();
@@ -41,6 +53,20 @@ public class TerrainService {
             "BEACH", "BOG", "CLEARED", "DESERT", "ESTUARY", "FARMLAND", "CON_FOREST", "DEC_FOREST", "GLACIER", "GRASSLAND", "JUNGLE",
             "LAKE", "LAVA", "MARSH", "OCEAN", "RAPIDS", "REEF", "RIVER", "ROAD", "ROCKY", "SALT_LAKE", "SAND_DUNES", "SCORCHED_EARTH", "SILT_BED",
             "SINK_HOLE", "SWAMP", "VOLCANIC","RIVER_SOURCE"};
+
+    private String[] orientedTerrains = {"BEACH","LAKE","RIVER","RIVER_SOURCE","ROAD"};
+    private String[] beachOriented = {"BEACHN","BEACHE","BEACHS","BEACHW","BEACHNE","BEACHES","BEACHSW","BEACHNW","BEACHNES","BEACHESW","BEACHNSW","BEACHNEW","BEACHNESW"};
+    private String[] lakeOriented = {"LAKEN","LAKEE","LAKES","LAKEW","LAKENE","LAKEES","LAKESW","LAKENW","LAKENES","LAKEESW","LAKENSW","LAKENEW","LAKENESW"};
+    private String[] orientedFileNames ={
+      "BeachN_25k25k.jpg","WaterNS_25k25k.jpg","WaterNEW_25k25k.jpg","NONE",
+            "WaterN_25k25k.jpg","WaterNS_25k25k.jpg","WaterNEW_25k25k.jpg","Water_25k25k.jpg",
+    };
+
+    private String[] roadOverlays = {"STRAIGHT","NEJUNCTION","NESJUNCTION","NESWJUNCTION"};
+    private String[] riverOverlays = {"TINY2SMALL","TINY2TINY","SMALL2MED","SMALL2SMALL","SMALL2MED",
+                                        "MED2SMALL","MED2MED","MED2LARGE","LARGE2MED","LARGE2LARGE","LARGE2XlARGE",
+                                        "xLARGE2lARGE","XLARGE2XLARGE"};
+
 
     public int[] terrColors = {0xFFD700, 0x20B2AA, 0xD3D3D3, 0xF5DEB3, 0x008080, 0x6B8E23, 0x006400, 0x008000,
             0x00BFFF, 0x9ACD32, 0x7CFC00, 0x0000FF, 0x800000, 0x3CB371, 0x00008B, 0x8B008B, 0x00CED1,
@@ -81,6 +107,7 @@ public class TerrainService {
         this();
         this.mapYDimension = mapYDimension;
     }
+
     public TerrainService() {
         for (int id = 0; id < terrNames.length; id++) {
             terrMap.put(terrNames[id], terrColors[id]);
@@ -96,6 +123,33 @@ public class TerrainService {
         adjOrthWeight = 0.50;           //weight given to orthographically adjacent map points
         adjCornWeight = 0.025;          //weight given to diagonally adjacent map points
         generalWeight = 0.035;
+
+        imageFiles = new ArrayList<>();
+        imageFiles = loadImageFiles("imageFile.csv");
+        for (ImageFile f: imageFiles){
+            terrainFiles.put(f.getKey(),f.getFileName());
+        }
+    }
+
+    private List loadImageFiles(String s) {
+        List<ImageFile> imageFiles = new ArrayList();
+        Path pathToFile = Paths.get(s);
+
+        try (BufferedReader br = Files.newBufferedReader(pathToFile, StandardCharsets.US_ASCII)) {
+            // read the first line from the text file
+            String line = br.readLine();
+            // loop until all lines are read
+            while (line != null) {
+                // use string.split to load a string array with the values from, using a comma as the delimiter
+                String[] attributes = line.split(",");
+                ImageFile imageFile = new ImageFile(attributes);
+                // adding imageFile into
+                imageFiles.add(imageFile);
+                // read next line before looping -if end of file reached, line would be null
+                line = br.readLine();
+        }
+    } catch (IOException ioe) { ioe.printStackTrace(); }
+        return imageFiles;
     }
 
     public void testImageDrawOverlay(String target, String source) throws IOException {
@@ -262,11 +316,12 @@ public class TerrainService {
         //Calculate unique random seed for this tactical map generation
         double randSeed = getTerrainSeed(xPos,yPos);
         //Lay background terrain for tactical ( or “small”) map This is now a large 25Kx25k pixel jpg
-        BufferedImage bigMapImage, smallMapImage;
+        BufferedImage bigMapImage, smallMapImage,bgImage ;
         bigMapImage = ImageIO.read(new File(bigFileName));
-        int[][] pixelBox = getPixelBox(bigMapImage,3,3);
-        int terrainColor = (bigMapImage.getRGB(xPos, yPos) & 0x00FFFFFF);     //strip off the alpha, leaves only RGB
+        int[][] pixelBox = getPixelBox(bigMapImage,xPos,yPos);
+        int terrainColor = pixelBox[1][1];     //strip off the alpha, leaves only RGB
         //        -	If shoreline map (lake or ocean shore) orient correct map background
+        bgImage = loadBackGroundImage(pixelBox);
         // If river map, assemble river tiles according to river network size and direction
         //        -	Load river map file corresponding to river map coordinate for this small map
         //-	complementary background image objects)
@@ -281,6 +336,51 @@ public class TerrainService {
         return 1;
     }
 
+    private BufferedImage loadBackGroundImage(int[][] pixelBox) {
+        int terrainColor = pixelBox[0][0];
+        int mapTerrain = pixelBox[1][1];
+        int rotation = 0;
+        List<String> dirTerrains = Arrays.asList("Beach","Lake","Road","River");
+        String fileName = terrMap.getKey(terrainColor);
+        //for an expanded version we need to review the type of terran and possibly the surrounding terrain to determine
+        //actual type of background terrain. For now use grassland background or stock maps
+        if(dirTerrains.contains(terrMap.getKey(terrainColor))){
+            String oriented = getWaterOrientation(pixelBox);
+            fileName.concat(oriented);
+            switch (oriented) {
+                case "N": break;
+                case "E": rotation = 90;    break;
+                case "S": rotation = 180;   break;
+                case "W": rotation = 180;   break;
+                case "NE": rotation = 0;    break;
+                case "NS": rotation = 0;    break;
+                case "NW": rotation = 270;  break;
+                case "NEW": rotation = 0;   break;
+                case "NES": rotation = 90;  break;
+                case "NSE": rotation = 180; break;
+                case "NESW": rotation = 0;  break;
+                case "ES": rotation = 90;   break;
+                case "EW": rotation = 90;   break;
+                case "ESW": rotation = 180; break;
+                case "SW": rotation = 180;  break;
+                default: rotation = 0;      break;     //This is a self contained map, and unconnected beach (island) or lake
+            }
+            System.out.println(rotation);
+        }
+        return null;
+    }
+
+    private String getWaterOrientation(int[][] pixelBox) {
+        int orientation = 0;
+        int terrainType = pixelBox[1][1];
+        String oriented = "";
+        if(terrainType==pixelBox[1][0]) oriented.concat("N");
+        if(terrainType==pixelBox[2][1]) oriented.concat("E");;
+        if(terrainType==pixelBox[1][2]) oriented.concat("S");;
+        if(terrainType==pixelBox[0][1]) oriented.concat("W");;
+
+        return oriented;
+    }
 
 
     //bigXPos, bigYPos is the position of regional(biggie) section on the world map; smallWidth and smallHeight set the
